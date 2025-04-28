@@ -64,8 +64,10 @@ client.once('ready', async () => {
     const postChannel = await client.channels.fetch(LINKEDIN_CHANNEL_ID) as TextChannel;
     const modChannel = await client.channels.fetch(MODERATOR_CHANNEL_ID) as TextChannel;
 
-    const since = Date.now() - 24 * 60 * 60 * 1000;
-    const messages = await fetchMessagesSince(postChannel, since);
+    // Début du jour courant à minuit UTC
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const messages = await fetchMessagesSince(postChannel, startOfDay);
     // Calcul des stats de réactions ✅ et 💬
     const postsStats: { count: number; userTags: string[]; userIds: string[] }[] = [];
     const countsPerUser: Record<string, number> = {};
@@ -123,20 +125,40 @@ client.once('ready', async () => {
 
   // Commande manuelle !scan pour envoyer le rapport à la demande
   client.on('messageCreate', async message => {
-    // Ne réagit à !scan que dans le salon #linkedin-posts
     if (message.channel.id !== LINKEDIN_CHANNEL_ID) return;
-    console.log('[DEBUG] messageCreate détecté dans le bon salon :', message.channel.id, message.content);
     if (message.author.bot) return;
-    if (message.content === '!scan') {
-      console.log('[TRACE] Enter !scan handler — channel:', message.channel.id, 'user:', message.author.tag);
+    if (message.content === '!scan jour' || message.content === '!scan semaine') {
+      // Vérification du rôle "admin"
+      const member = await message.guild?.members.fetch(message.author.id);
+      if (!member?.roles.cache.some(role => role.name.toLowerCase() === 'admin')) {
+        await message.reply("⛔ Seuls les administrateurs peuvent utiliser cette commande.");
+        return;
+      }
+
       const guild = await client.guilds.fetch(GUILD_ID);
       await guild.members.fetch();
       const postChannel = await client.channels.fetch(LINKEDIN_CHANNEL_ID) as TextChannel;
       const modChannel = await client.channels.fetch(MODERATOR_CHANNEL_ID) as TextChannel;
 
-      // Messages des 7 derniers jours, filtrés pour ceux contenant un lien
-      const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
-      const allMessages = await fetchMessagesSince(postChannel, since);
+      // Détermination de la période à scanner
+      let since: number;
+      let description: string;
+      if (message.content === '!scan jour') {
+        // Début du jour courant à minuit UTC
+        const now = new Date();
+        since = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        description = "Statistiques du jour";
+      } else if (message.content === '!scan semaine') {
+        // Début de la semaine (vendredi précédent à 18h)
+        const now = new Date();
+        const day = now.getDay();
+        const daysSinceFriday = (day + 7 - 5) % 7; // 5 = vendredi
+        const lastFriday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceFriday, 18, 0, 0, 0);
+        since = lastFriday.getTime();
+        description = "Statistiques de la semaine";
+      }
+      // Récupération des messages
+      const allMessages = await fetchMessagesSince(postChannel, since!);
       const urlRegex = /https?:\/\//;
       const filteredMessages = allMessages.filter(m => urlRegex.test(m.content));
       // Collecte des stats par post et globales
@@ -229,6 +251,21 @@ client.once('ready', async () => {
         await message.reply("Erreur : impossible d'envoyer les statistiques.");
       }
     }
+  });
+
+  cron.schedule('0 18 * * 5', async () => {
+    const guild = await client.guilds.fetch(GUILD_ID);
+    await guild.members.fetch();
+    const postChannel = await client.channels.fetch(LINKEDIN_CHANNEL_ID) as TextChannel;
+    const modChannel = await client.channels.fetch(MODERATOR_CHANNEL_ID) as TextChannel;
+
+    // Début de la semaine (vendredi précédent à 18h)
+    const now = new Date();
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6, 18, 0, 0, 0).getTime();
+    const messages = await fetchMessagesSince(postChannel, startOfWeek);
+
+    // ... copie la logique de stats du cron ou de !scan, mais sur messages ...
+    // (tu peux factoriser le code pour éviter la duplication)
   });
 });
 
