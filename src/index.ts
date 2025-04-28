@@ -125,16 +125,30 @@ client.once('ready', async () => {
 
   // Commande manuelle !scan pour envoyer le rapport à la demande
   client.on('messageCreate', async message => {
-    if (message.channel.id !== LINKEDIN_CHANNEL_ID) return;
-    if (message.author.bot) return;
+    console.log('[DEBUG] Message reçu:', message.content, 'dans le salon:', message.channel.id);
+
+    if (message.channel.id !== MODERATOR_CHANNEL_ID) {
+      console.log('[DEBUG] Mauvais salon. Attendu:', MODERATOR_CHANNEL_ID, 'Reçu:', message.channel.id);
+      return;
+    }
+
+    if (message.author.bot) {
+      console.log('[DEBUG] Message ignoré car provient d\'un bot');
+      return;
+    }
+
     if (message.content === '!scan jour' || message.content === '!scan semaine') {
-      // Vérification du rôle "admin"
+      console.log('[DEBUG] Commande scan détectée:', message.content);
+
+      // Vérification du rôle "Le_Dalleu"
       const member = await message.guild?.members.fetch(message.author.id);
-      if (!member?.roles.cache.some(role => role.name.toLowerCase() === 'admin')) {
+      if (!member?.roles.cache.some(role => role.name.toLowerCase() === 'le_dalleu')) {
+        console.log('[DEBUG] Utilisateur sans le rôle Le_Dalleu');
         await message.reply("⛔ Seuls les administrateurs peuvent utiliser cette commande.");
         return;
       }
 
+      console.log('[DEBUG] Début du scan...');
       const guild = await client.guilds.fetch(GUILD_ID);
       await guild.members.fetch();
       const postChannel = await client.channels.fetch(LINKEDIN_CHANNEL_ID) as TextChannel;
@@ -148,6 +162,7 @@ client.once('ready', async () => {
         const now = new Date();
         since = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
         description = "Statistiques du jour";
+        console.log(`[DEBUG] ${description} - messages filtrés:`);
       } else if (message.content === '!scan semaine') {
         // Début de la semaine (vendredi précédent à 18h)
         const now = new Date();
@@ -156,11 +171,17 @@ client.once('ready', async () => {
         const lastFriday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceFriday, 18, 0, 0, 0);
         since = lastFriday.getTime();
         description = "Statistiques de la semaine";
+        console.log(`[DEBUG] ${description} - messages filtrés:`);
       }
       // Récupération des messages
       const allMessages = await fetchMessagesSince(postChannel, since!);
       const urlRegex = /https?:\/\//;
       const filteredMessages = allMessages.filter(m => urlRegex.test(m.content));
+      console.log('[DEBUG] nombre de messages filtrés:', filteredMessages.length);
+      if (filteredMessages.length === 0) {
+        await message.reply("Aucun post avec lien trouvé pour cette période.");
+        return;
+      }
       // Collecte des stats par post et globales
       const postsStats: { msg: Message; userIds: string[] }[] = [];
       const countsPerUser: Record<string, number> = {};
