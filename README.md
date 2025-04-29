@@ -1,74 +1,93 @@
-# Discord Bot
+# LinkedIn Posts Discord Bot
 
-Ce repository contient un bot Discord développé avec Node.js et TypeScript.
+A Discord bot that tracks and analyzes LinkedIn posts shared in a dedicated channel, monitors reactions, and generates activity reports.
 
-## Prérequis
+## 📋 Features
+
+- Tracks LinkedIn post links shared in a dedicated channel
+- Monitors reactions (✅ and 💬) on posts
+- Generates daily and weekly reports automatically
+- Provides manual report generation commands
+- Identifies members who haven't reacted to posts
+
+## 🚀 Installation
+
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Create a `.env` file based on `.env.example`
+4. Build the TypeScript code: `npm run build`
+5. Start the bot: `npm start`
+
+For production, consider using PM2:
+```bash
+pm2 start dist/index.js --name discord-bot
+```
+
+## ⚙️ Prerequisites
 
 - Node.js (>=16)
-- npm ou yarn
-- PM2 (gestionnaire de processus)
-- Un fichier `.env` configuré avec vos variables d'environnement :
-  ```env
-  DISCORD_TOKEN=your_token_here
-  GUILD_ID=your_guild_id
-  LINKEDIN_CHANNEL_ID=your_channel_id
-  MODERATOR_CHANNEL_ID=your_channel_id
-  ```
+- npm or yarn
+- PM2 (process manager)
+- Discord bot token (from [Discord Developer Portal](https://discord.com/developers/applications))
 
-## Installation
+## 🔑 Environment Variables
 
-1. Cloner le dépôt :
-   ```bash
-   git clone <url-du-dépôt>
-   cd discord
-   ```
-2. Installer les dépendances :
-   ```bash
-   npm install
-   # ou
-   yarn install
-   ```
-3. Créer et remplir le fichier `.env` à la racine.
+Create a `.env` file with the following variables:
 
-## Démarrage du bot avec PM2
+# Discord Bot Token (from Discord Developer Portal)
+DISCORD_TOKEN=your_discord_bot_token
 
-On utilise **PM2** pour garder le bot en ligne en permanence.
+# Discord Server (Guild) ID
+GUILD_ID=123456789012345678
 
-1. Démarrer le bot :
-   ```bash
-   pm2 start src/index.ts --name discord-bot --interpreter ts-node
-   ```
-   > Ici, `discord-bot` est le nom du processus.
+# Channel IDs
+LINKEDIN_CHANNEL_ID=123456789012345678  # Channel for sharing LinkedIn posts
+MODERATOR_CHANNEL_ID=123456789012345678 # Channel for receiving reports
 
-2. Consulter les logs en temps réel :
-   ```bash
-   pm2 logs discord-bot
-   ```
+## 💻 Commands
 
-3. Redémarrer le bot :
-   ```bash
-   pm2 restart discord-bot
-   ```
+The bot responds to the following commands in the moderator channel:
 
-4. Autres commandes utiles :
-   - Arrêter le bot : `pm2 stop discord-bot`
-   - Supprimer le processus : `pm2 delete discord-bot`
-   - Lister tous les processus : `pm2 list`
+| Command | Description | Required Role |
+|---------|-------------|--------------|
+| `!scan day` | Generate a report for posts from the current day | Le_Dalleu |
+| `!scan week` | Generate a report for posts from the current week (since last Friday 18:00 UTC) | Le_Dalleu |
 
-## Structure du projet
+## ⏱️ Automatic Reports
 
-- `src/index.ts` : point d'entrée du bot
-- `package.json`      : dépendances et scripts
-- `tsconfig.json`     : configuration TypeScript
+The bot automatically generates reports:
 
-## Contribuer
+- **Daily Report**: Every day at midnight UTC, a report of the previous day's posts is sent to the moderator channel
+- **Weekly Report**: Every Friday at 18:00 UTC, a weekly summary report is sent to the moderator channel
 
-Les contributions sont les bienvenues !
+## 📊 Report Content
 
-1. Forkez le projet
-2. Créez une branche `feature/ma-fonctionnalite`
-3. Commit, puis push
-4. Ouvrez une Pull Request
+Reports include:
+- Posts grouped by day
+- Reaction counts per post
+- Reaction distribution among users
+- List of members who haven't reacted to any posts
 
----
-*Écrit en Français pour faciliter la prise en main.*
+## 📁 Project Structure
+
+- `src/index.ts`: bot entry point
+- `package.json`: dependencies and scripts
+- `tsconfig.json`: TypeScript configuration
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the project
+2. Create a branch `feature/your-feature`
+3. Commit, then push
+4. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the [GNU GPL v3](LICENSE) - see the LICENSE file for details.
+
+This license ensures that:
+- Anyone can use, modify, and distribute this code
+- All derivative works must also be distributed under the GPL-3.0
+- Source code must be made available when the software is distributed
