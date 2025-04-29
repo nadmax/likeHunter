@@ -84,63 +84,82 @@ client.once('ready', async () => {
 
     // Début du jour courant à minuit UTC
     const now = new Date();
-    const yesterday= new Date(now)
-    yesterday.setDate(now.getDate()-1)
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
     const startOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).getTime();
     const messages = await fetchMessagesSince(postChannel, startOfDay);
-    // Calcul des stats de réactions ✅ et 💬
-    const postsStats: { count: number; userTags: string[]; userIds: string[] }[] = [];
-    const countsPerUser: Record<string, number> = {};
-
-    for (const msg of messages) {
+    // On ne garde que les messages avec un lien
+    const urlRegex = /https?:\/\//;
+    const filteredMessages = messages.filter(m => urlRegex.test(m.content));
+    // On regroupe les posts par jour (normalement un seul jour ici, mais on garde la logique pour homogénéité)
+    const postsStats: { msg: Message; userIds: string[] }[] = [];
+    for (const msg of filteredMessages) {
       const checkReaction = msg.reactions.cache.get('✅');
       const speechReaction = msg.reactions.cache.get('💬');
       let userIds: string[] = [];
       if (checkReaction) {
         const users = await checkReaction.users.fetch();
-        const ids = Array.from(users.values()).filter(u => !u.bot).map(u => u.id);
-        userIds.push(...ids);
+        userIds.push(...Array.from(users.values()).filter(u => !u.bot).map(u => u.id));
       }
       if (speechReaction) {
         const users = await speechReaction.users.fetch();
-        const ids = Array.from(users.values()).filter(u => !u.bot).map(u => u.id);
-        userIds.push(...ids);
+        userIds.push(...Array.from(users.values()).filter(u => !u.bot).map(u => u.id));
       }
-      // Uniques
       userIds = Array.from(new Set(userIds));
-      const userTags = userIds.map(id => guild.members.cache.get(id)?.user.tag || id);
-      postsStats.push({ count: userIds.length, userTags, userIds });
-      for (const id of userIds) {
-        countsPerUser[id] = (countsPerUser[id] || 0) + 1;
-      }
+      postsStats.push({ msg, userIds });
     }
-
-    // Identification des membres sans réaction
-    const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
-    const reactedIds = Object.keys(countsPerUser);
-    const noReactIds = allMemberIds.filter(id => !reactedIds.includes(id));
-    const noReactTags = noReactIds.map(id => guild.members.cache.get(id)?.user.tag || id);
-
-    // Construction du rapport
-    const reportLines: string[] = ['📊 Statistiques pour #linkedin-posts'];
-    postsStats.forEach((p, idx) => {
-      reportLines.push(`post #${idx + 1}`);
-      reportLines.push(`${p.count} intentions avec ${p.userTags.join(', ')}`);
+    // Regroupement par jour
+    const weekdayNames = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+    const postsByDate = new Map<string, { date: Date; posts: typeof postsStats }>();
+    postsStats.forEach(p => {
+      const date = new Date(p.msg.createdTimestamp);
+      const key = date.toISOString().split('T')[0];
+      if (!postsByDate.has(key)) postsByDate.set(key, { date, posts: [] });
+      postsByDate.get(key)!.posts.push(p);
     });
-    reportLines.push('');
-    reportLines.push(`Total de posts : ${postsStats.length}`);
-    reportLines.push('');
-    reportLines.push('Répartition par utilisateur ayant réagi :');
-    Object.entries(countsPerUser).forEach(([id, c]) => {
-      const tag = guild.members.cache.get(id)?.user.tag || id;
-      reportLines.push(`- ${tag}: ${c}`);
-    });
-    reportLines.push('');
-    reportLines.push('Membres sans réaction :');
-    noReactTags.forEach(tag => reportLines.push(`- ${tag}`));
-
-    // Envoi du rapport en chunks si trop long
-    await sendInChunks(modChannel, reportLines);
+    // Création des rapports par jour avec le nouvel affichage
+    const dayLines: string[] = [];
+    for (const { date, posts } of postsByDate.values()) {
+      const weekday = weekdayNames[date.getDay()];
+      const dateStr = `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`;
+      // Nombre de posts
+      const nbPosts = posts.length;
+      // Nombre total de réactions sur la journée
+      let totalReactions = 0;
+      const userReactionCount: Record<string, number> = {};
+      posts.forEach(p => {
+        totalReactions += p.userIds.length;
+        p.userIds.forEach(id => {
+          userReactionCount[id] = (userReactionCount[id] || 0) + 1;
+        });
+      });
+      // Classement des participants (trié)
+      const classement = Object.entries(userReactionCount).sort((a, b) => b[1] - a[1]);
+      // Membres inactifs (ceux qui n'ont pas réagi ce jour-là)
+      const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
+      const actifs = new Set(Object.keys(userReactionCount));
+      const inactifs = allMemberIds.filter(id => !actifs.has(id));
+      // Construction du texte
+      dayLines.push(`\n📅 ${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${dateStr}`);
+      dayLines.push(`- Nombre de posts publiés : ${nbPosts}`);
+      dayLines.push(`- Nombre total de réactions : ${totalReactions}`);
+      dayLines.push(`\n🏆 Classement des participants`);
+      if (classement.length === 0) {
+        dayLines.push('Aucun participant ce jour-là.');
+      } else {
+        classement.forEach(([id, c], idx) => {
+          dayLines.push(`${idx + 1}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
+        });
+      }
+      dayLines.push(`\n👻 Membres inactifs`);
+      if (inactifs.length === 0) {
+        dayLines.push('Aucun membre inactif ce jour-là.');
+      } else {
+        inactifs.forEach(id => dayLines.push(`- <@${id}>`));
+      }
+      dayLines.push(''); // ligne vide entre les jours
+    }
+    await sendInChunks(modChannel, dayLines);
   });
 
   // Commande manuelle !scan pour envoyer le rapport à la demande
@@ -178,10 +197,10 @@ client.once('ready', async () => {
       let since: number;
       let description: string;
       if (message.content === '!scan jour') {
-        // Début du jour courant à minuit UTC
+        // Les 24 dernières heures à partir de maintenant
         const now = new Date();
-        since = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-        description = "Statistiques du jour";
+        since = now.getTime() - 24 * 60 * 60 * 1000;
+        description = "Statistiques des dernières 24h";
         console.log(`[DEBUG] ${description} - messages filtrés:`);
       } else if (message.content === '!scan semaine') {
         // Début de la semaine (vendredi précédent à 18h)
@@ -235,24 +254,47 @@ client.once('ready', async () => {
         if (!postsByDate.has(key)) postsByDate.set(key, { date, posts: [] });
         postsByDate.get(key)!.posts.push(p);
       });
-      // Création des embeds par jour
-      const dayEmbeds: EmbedBuilder[] = [];
+      // Création des rapports par jour avec le nouvel affichage
+      const dayLines: string[] = [];
       for (const { date, posts } of postsByDate.values()) {
         const weekday = weekdayNames[date.getDay()];
         const dateStr = `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`;
-        const embed = new EmbedBuilder()
-          .setTitle(`📅 ${weekday} ${dateStr} - ${posts.length} post${posts.length>1?'s':''}`)
-          .setColor('DarkBlue');
-        posts.forEach((p, idx) => {
-          const reactionsCount = p.userIds.length;
-          const mentions = p.userIds.map(id => `<@${id}>`).join(' ') || 'aucune réaction';
-          embed.addFields({
-            name: `Post ${idx+1} - ${reactionsCount} réaction${reactionsCount>1?'s':''}`,
-            value: `[Voir le post](${p.msg.url})\n${mentions}`,
-            inline: false
+        // Nombre de posts
+        const nbPosts = posts.length;
+        // Nombre total de réactions sur la journée
+        let totalReactions = 0;
+        const userReactionCount: Record<string, number> = {};
+        posts.forEach(p => {
+          totalReactions += p.userIds.length;
+          p.userIds.forEach(id => {
+            userReactionCount[id] = (userReactionCount[id] || 0) + 1;
           });
         });
-        dayEmbeds.push(embed);
+        // Classement des participants (trié)
+        const classement = Object.entries(userReactionCount).sort((a, b) => b[1] - a[1]);
+        // Membres inactifs (ceux qui n'ont pas réagi ce jour-là)
+        const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
+        const actifs = new Set(Object.keys(userReactionCount));
+        const inactifs = allMemberIds.filter(id => !actifs.has(id));
+        // Construction du texte
+        dayLines.push(`\n📅 ${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${dateStr}`);
+        dayLines.push(`- Nombre de posts publiés : ${nbPosts}`);
+        dayLines.push(`- Nombre total de réactions : ${totalReactions}`);
+        dayLines.push(`\n🏆 Classement des participants`);
+        if (classement.length === 0) {
+          dayLines.push('Aucun participant ce jour-là.');
+        } else {
+          classement.forEach(([id, c], idx) => {
+            dayLines.push(`${idx + 1}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
+          });
+        }
+        dayLines.push(`\n👻 Membres inactifs`);
+        if (inactifs.length === 0) {
+          dayLines.push('Aucun membre inactif ce jour-là.');
+        } else {
+          inactifs.forEach(id => dayLines.push(`- <@${id}>`));
+        }
+        dayLines.push(''); // ligne vide entre les jours
       }
       // Embed répartition triée
       const distEntries = Object.entries(countsPerUser).sort((a,b) => b[1] - a[1]);
@@ -269,16 +311,6 @@ client.once('ready', async () => {
       // Envoi des rapports
       try {
         // Envoi des rapports journaliers en texte chunké pour contourner la limite d'embeds
-        const dayLines: string[] = [];
-        for (const embed of dayEmbeds) {
-          // Titre du jour
-          dayLines.push(embed.data.title ?? '');
-          // Détails des posts
-          for (const field of embed.data.fields ?? []) {
-            dayLines.push(`${field.name}: ${field.value}`);
-          }
-          dayLines.push(''); // ligne vide entre les jours
-        }
         await sendInChunks(modChannel, dayLines);
         // Envoi du Top réacteurs en texte chunké (évite les embeds trop gros)
         const distLines = ['🔢 Top réacteurs', ...distEntries.map(([id, c]) => `- <@${id}>: ${c}`)];
