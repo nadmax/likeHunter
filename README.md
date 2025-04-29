@@ -50,8 +50,8 @@ The bot responds to the following commands in the moderator channel:
 
 | Command | Description | Required Role |
 |---------|-------------|--------------|
-| `!scan day` | Generate a report for posts from the current day | Le_Dalleu |
-| `!scan week` | Generate a report for posts from the current week (since last Friday 18:00 UTC) | Le_Dalleu |
+| `!scan jour` | Generate a report for posts from the current day | Le_Dalleu |
+| `!scan semaine` | Generate a report for posts from the current week (since last Friday 18:00 UTC) | Le_Dalleu |
 
 ## ⏱️ Automatic Reports
 
