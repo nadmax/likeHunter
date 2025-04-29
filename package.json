@@ -9,7 +9,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "discord.js": "14.19.1",
     "dotenv": "16.5.0",

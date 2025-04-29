@@ -85,9 +85,10 @@ Contributions are welcome!
 
 ## 📄 License
 
-This project is licensed under the [GNU GPL v3](LICENSE) - see the LICENSE file for details.
+This project is licensed under the [GNU AGPL v3](LICENSE) - see the LICENSE file for details.
 
 This license ensures that:
 - Anyone can use, modify, and distribute this code
-- All derivative works must also be distributed under the GPL-3.0
+- All derivative works must also be distributed under the AGPL-3.0
 - Source code must be made available when the software is distributed
+- If you modify the code and run it as a network service (like a Discord bot), you must make your modified source code available to users
