@@ -66,7 +66,9 @@ client.once('ready', async () => {
 
     // Début du jour courant à minuit UTC
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const yesterday= new Date(now)
+    yesterday.setDate(now.getDate()-1)
+    const startOfDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate()).getTime();
     const messages = await fetchMessagesSince(postChannel, startOfDay);
     // Calcul des stats de réactions ✅ et 💬
     const postsStats: { count: number; userTags: string[]; userIds: string[] }[] = [];
