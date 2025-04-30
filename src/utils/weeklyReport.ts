@@ -28,14 +28,9 @@ export function weeklyReports(GUILD_ID:string, LINKEDIN_CHANNEL_ID:string, MODER
         const postsStats: { msg: Message; userIds: string[] }[] = [];
         for (const msg of filteredMessages) {
           const checkReaction = msg.reactions.cache.get('✅');
-          const speechReaction = msg.reactions.cache.get('💬');
           let userIds: string[] = [];
           if (checkReaction) {
             const users = await checkReaction.users.fetch();
-            userIds.push(...Array.from(users.values()).filter(u => !u.bot).map(u => u.id));
-          }
-          if (speechReaction) {
-            const users = await speechReaction.users.fetch();
             userIds.push(...Array.from(users.values()).filter(u => !u.bot).map(u => u.id));
           }
           userIds = Array.from(new Set(userIds));
