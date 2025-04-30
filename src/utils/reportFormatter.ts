@@ -48,14 +48,24 @@ export function formatReport({
       let lastScore: number | null = null;
       let lastRank = 0;
       let realRank = 0;
-      classement.forEach(([id, c]) => {
+      let currentGroup: string[] = [];
+      classement.forEach(([id, c], idx) => {
         realRank++;
         if (c !== lastScore) {
+          if (currentGroup.length > 0) {
+            dayLines.push(`position ${lastRank}`);
+            dayLines.push(...currentGroup);
+            currentGroup = [];
+          }
           lastRank = realRank;
           lastScore = c;
         }
-        dayLines.push(`${lastRank}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
+        currentGroup.push(`<@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
       });
+      if (currentGroup.length > 0) {
+        dayLines.push(`position ${lastRank}`);
+        dayLines.push(...currentGroup);
+      }
     }
     dayLines.push(`\n👻 ${inactifs.length} Membres inactifs`);
     if (inactifs.length === 0) {
@@ -81,15 +91,24 @@ export function formatReport({
       let lastScoreSemaine: number | null = null;
       let lastRankSemaine = 0;
       let realRankSemaine = 0;
-      console.log('EX AEQUO LOGIC ACTIVE');
-      classementSemaine.forEach(([id, c]) => {
+      let currentGroupSemaine: string[] = [];
+      classementSemaine.forEach(([id, c], idx) => {
         realRankSemaine++;
         if (c !== lastScoreSemaine) {
+          if (currentGroupSemaine.length > 0) {
+            dayLines.push(`position ${lastRankSemaine}`);
+            dayLines.push(...currentGroupSemaine);
+            currentGroupSemaine = [];
+          }
           lastRankSemaine = realRankSemaine;
           lastScoreSemaine = c;
         }
-        dayLines.push(`${lastRankSemaine}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
+        currentGroupSemaine.push(`<@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
       });
+      if (currentGroupSemaine.length > 0) {
+        dayLines.push(`position ${lastRankSemaine}`);
+        dayLines.push(...currentGroupSemaine);
+      }
     }
     dayLines.push(`\n👻 ${inactifsSemaine.length} Membres inactifs (semaine)`);
     if (inactifsSemaine.length === 0) {
