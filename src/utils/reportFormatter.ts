@@ -81,6 +81,7 @@ export function formatReport({
       let lastScoreSemaine: number | null = null;
       let lastRankSemaine = 0;
       let realRankSemaine = 0;
+      console.log('EX AEQUO LOGIC ACTIVE');
       classementSemaine.forEach(([id, c]) => {
         realRankSemaine++;
         if (c !== lastScoreSemaine) {
