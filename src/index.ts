@@ -34,7 +34,7 @@ client.on('warn', warn => console.warn('[warn]', warn));
 client.on('error', error => console.error('[error]', error));
 
 client.once('ready', async () => {
-  console.log(`✅ Bot connecté en tant que ${client.user?.tag}`);
+  console.log(`✅ Bot (ex aequo) connecté en tant que ${client.user?.tag}`);
   const GUILD_ID = process.env.GUILD_ID!;
   const LINKEDIN_CHANNEL_ID = process.env.LINKEDIN_CHANNEL_ID!;
   const MODERATOR_CHANNEL_ID = process.env.MODERATOR_CHANNEL_ID!;

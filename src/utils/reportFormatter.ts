@@ -34,9 +34,6 @@ export function formatReport({
       });
     });
     const classement = Object.entries(userReactionCount).sort((a, b) => b[1] - a[1]);
-    let lastScore: number | null = null;
-    let lastRank = 0;
-    let realRank = 0;
     const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
     const actifs = new Set(Object.keys(userReactionCount));
     const inactifs = allMemberIds.filter(id => !actifs.has(id));
@@ -48,7 +45,10 @@ export function formatReport({
     if (classement.length === 0) {
       dayLines.push('Aucun participant ce jour-là.');
     } else {
-      classement.forEach(([id, c], idx) => {
+      let lastScore: number | null = null;
+      let lastRank = 0;
+      let realRank = 0;
+      classement.forEach(([id, c]) => {
         realRank++;
         if (c !== lastScore) {
           lastRank = realRank;
@@ -61,7 +61,7 @@ export function formatReport({
     if (inactifs.length === 0) {
       dayLines.push('Aucun membre inactif ce jour-là.');
     } else {
-      inactifs.forEach(id => dayLines.push(`- <@${id}>`));
+      inactifs.forEach((id: string) => dayLines.push(`- <@${id}>`));
     }
     dayLines.push('');
   }
@@ -75,14 +75,13 @@ export function formatReport({
     dayLines.push(`- Nombre total de réactions : ${totalWeekReactions}`);
     dayLines.push(`Nombres de membres sur le serveur : ${allMemberIds.length}`);
     const classementSemaine = Object.entries(weekUserReactionCount).sort((a, b) => b[1] - a[1]);
-    let lastScoreSemaine: number | null = null;
-    let lastRankSemaine = 0;
-    let realRankSemaine = 0;
-    dayLines.push(`\n🏆 Classement des ${Object.keys(weekUserReactionCount).length} participants (semaine)`);
     if (classementSemaine.length === 0) {
       dayLines.push('Aucun participant cette semaine.');
     } else {
-      classementSemaine.forEach(([id, c], idx) => {
+      let lastScoreSemaine: number | null = null;
+      let lastRankSemaine = 0;
+      let realRankSemaine = 0;
+      classementSemaine.forEach(([id, c]) => {
         realRankSemaine++;
         if (c !== lastScoreSemaine) {
           lastRankSemaine = realRankSemaine;
