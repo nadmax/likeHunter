@@ -60,23 +60,33 @@ cron.schedule('0 0 * * *', async () => {
       });
       // Classement des participants (trié)
       const classement = Object.entries(userReactionCount).sort((a, b) => b[1] - a[1]);
-      // Membres inactifs (ceux qui n'ont pas réagi ce jour-là)
-      const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
-      const actifs = new Set(Object.keys(userReactionCount));
-      const inactifs = allMemberIds.filter(id => !actifs.has(id));
-      // Construction du texte
+      // Classement ex aequo
+      let lastScore: number | null = null;
+      let lastRank = 0;
+      let realRank = 0;
       dayLines.push(`\n📅 ${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${dateStr}`);
       dayLines.push(`- Nombre de posts publiés : ${nbPosts}`);
       dayLines.push(`- Nombre total de réactions : ${totalReactions}`);
-      dayLines.push(`\n🏆 Classement des participants`);
+      dayLines.push(`Nombres de membres sur le serveur : ${guild.members.cache.filter(m => !m.user.bot).size}`);
+      // Classement des participants (trié)
+      dayLines.push(`\n🏆 Classement des ${Object.keys(userReactionCount).length} participants`);
       if (classement.length === 0) {
         dayLines.push('Aucun participant ce jour-là.');
       } else {
         classement.forEach(([id, c], idx) => {
-          dayLines.push(`${idx + 1}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
+          realRank++;
+          if (c !== lastScore) {
+            lastRank = realRank;
+            lastScore = c;
+          }
+          dayLines.push(`${lastRank}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
         });
       }
-      dayLines.push(`\n👻 Membres inactifs`);
+      // Membres inactifs (ceux qui n'ont pas réagi ce jour-là)
+      dayLines.push(`\n👻 ${guild.members.cache.filter(m => !m.user.bot).size - Object.keys(userReactionCount).length} Membres inactifs`);
+      const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
+      const actifs = new Set(Object.keys(userReactionCount));
+      const inactifs = allMemberIds.filter(id => !actifs.has(id));
       if (inactifs.length === 0) {
         dayLines.push('Aucun membre inactif ce jour-là.');
       } else {

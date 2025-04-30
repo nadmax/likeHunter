@@ -66,21 +66,31 @@ export function weeklyReports(GUILD_ID:string, LINKEDIN_CHANNEL_ID:string, MODER
             });
           });
           const classement = Object.entries(userReactionCount).sort((a, b) => b[1] - a[1]);
-          const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
-          const actifs = new Set(Object.keys(userReactionCount));
-          const inactifs = allMemberIds.filter(id => !actifs.has(id));
+          // Classement ex aequo
+          let lastScore: number | null = null;
+          let lastRank = 0;
+          let realRank = 0;
           dayLines.push(`\n📅 ${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${dateStr}`);
           dayLines.push(`- Nombre de posts publiés : ${nbPosts}`);
           dayLines.push(`- Nombre total de réactions : ${totalReactions}`);
-          dayLines.push(`\n🏆 Classement des participants`);
+          dayLines.push(`Nombres de membres sur le serveur : ${guild.members.cache.filter(m => !m.user.bot).map(m => m.id).length}`);
+          dayLines.push(`\n🏆 Classement des ${Object.keys(userReactionCount).length} participants`);
           if (classement.length === 0) {
             dayLines.push('Aucun participant ce jour-là.');
           } else {
             classement.forEach(([id, c], idx) => {
-              dayLines.push(`${idx + 1}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
+              realRank++;
+              if (c !== lastScore) {
+                lastRank = realRank;
+                lastScore = c;
+              }
+              dayLines.push(`${lastRank}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
             });
           }
-          dayLines.push(`\n👻 Membres inactifs`);
+          dayLines.push(`\n👻 ${guild.members.cache.filter(m => !m.user.bot).map(m => m.id).length - Object.keys(userReactionCount).length} Membres inactifs`);
+          const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
+          const actifs = new Set(Object.keys(userReactionCount));
+          const inactifs = allMemberIds.filter(id => !actifs.has(id));
           if (inactifs.length === 0) {
             dayLines.push('Aucun membre inactif ce jour-là.');
           } else {
@@ -93,21 +103,30 @@ export function weeklyReports(GUILD_ID:string, LINKEDIN_CHANNEL_ID:string, MODER
         dayLines.push('**Récapitulatif de la semaine**');
         dayLines.push(`- Nombre total de posts : ${totalWeekPosts}`);
         dayLines.push(`- Nombre total de réactions : ${totalWeekReactions}`);
+        dayLines.push(`Nombres de membres sur le serveur : ${guild.members.cache.filter(m => !m.user.bot).map(m => m.id).length}`);
         // Classement global semaine
         const classementSemaine = Object.entries(weekUserReactionCount).sort((a, b) => b[1] - a[1]);
-        dayLines.push(`\n🏆 Classement des participants (semaine)`);
+        let lastScoreSemaine: number | null = null;
+        let lastRankSemaine = 0;
+        let realRankSemaine = 0;
+        dayLines.push(`\n🏆 Classement des ${Object.keys(weekUserReactionCount).length} participants (semaine)`);
         if (classementSemaine.length === 0) {
           dayLines.push('Aucun participant cette semaine.');
         } else {
           classementSemaine.forEach(([id, c], idx) => {
-            dayLines.push(`${idx + 1}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
+            realRankSemaine++;
+            if (c !== lastScoreSemaine) {
+              lastRankSemaine = realRankSemaine;
+              lastScoreSemaine = c;
+            }
+            dayLines.push(`${lastRankSemaine}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
           });
         }
         // Membres inactifs semaine
         const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
         const actifsSemaine = new Set(Object.keys(weekUserReactionCount));
         const inactifsSemaine = allMemberIds.filter(id => !actifsSemaine.has(id));
-        dayLines.push(`\n👻 Membres inactifs (semaine)`);
+        dayLines.push(`\n👻 ${guild.members.cache.filter(m => !m.user.bot).map(m => m.id).length - Object.keys(weekUserReactionCount).length} Membres inactifs (semaine)`);
         if (inactifsSemaine.length === 0) {
           dayLines.push('Aucun membre inactif cette semaine.');
         } else {
