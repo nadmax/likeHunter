@@ -3,6 +3,7 @@ import {client} from './client'
 import { TextChannel, Message } from 'discord.js';
 import { fetchMessagesSince } from './fetchMessagesSince';
 import { sendInChunks } from './sendInChunks';
+import { formatReport } from './reportFormatter';
 
 export function dailyReport (GUILD_ID: string, LINKEDIN_CHANNEL_ID: string, MODERATOR_CHANNEL_ID: string): void {
 
@@ -42,58 +43,7 @@ cron.schedule('0 0 * * *', async () => {
       if (!postsByDate.has(key)) postsByDate.set(key, { date, posts: [] });
       postsByDate.get(key)!.posts.push(p);
     });
-    // Création des rapports par jour avec le nouvel affichage
-    const dayLines: string[] = [];
-    for (const { date, posts } of postsByDate.values()) {
-      const weekday = weekdayNames[date.getDay()];
-      const dateStr = `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`;
-      // Nombre de posts
-      const nbPosts = posts.length;
-      // Nombre total de réactions sur la journée
-      let totalReactions = 0;
-      const userReactionCount: Record<string, number> = {};
-      posts.forEach(p => {
-        totalReactions += p.userIds.length;
-        p.userIds.forEach(id => {
-          userReactionCount[id] = (userReactionCount[id] || 0) + 1;
-        });
-      });
-      // Classement des participants (trié)
-      const classement = Object.entries(userReactionCount).sort((a, b) => b[1] - a[1]);
-      // Classement ex aequo
-      let lastScore: number | null = null;
-      let lastRank = 0;
-      let realRank = 0;
-      dayLines.push(`\n📅 ${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${dateStr}`);
-      dayLines.push(`- Nombre de posts publiés : ${nbPosts}`);
-      dayLines.push(`- Nombre total de réactions : ${totalReactions}`);
-      dayLines.push(`Nombres de membres sur le serveur : ${guild.members.cache.filter(m => !m.user.bot).size}`);
-      // Classement des participants (trié)
-      dayLines.push(`\n🏆 Classement des ${Object.keys(userReactionCount).length} participants`);
-      if (classement.length === 0) {
-        dayLines.push('Aucun participant ce jour-là.');
-      } else {
-        classement.forEach(([id, c], idx) => {
-          realRank++;
-          if (c !== lastScore) {
-            lastRank = realRank;
-            lastScore = c;
-          }
-          dayLines.push(`${lastRank}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
-        });
-      }
-      // Membres inactifs (ceux qui n'ont pas réagi ce jour-là)
-      dayLines.push(`\n👻 ${guild.members.cache.filter(m => !m.user.bot).size - Object.keys(userReactionCount).length} Membres inactifs`);
-      const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
-      const actifs = new Set(Object.keys(userReactionCount));
-      const inactifs = allMemberIds.filter(id => !actifs.has(id));
-      if (inactifs.length === 0) {
-        dayLines.push('Aucun membre inactif ce jour-là.');
-      } else {
-        inactifs.forEach(id => dayLines.push(`- <@${id}>`));
-      }
-      dayLines.push(''); // ligne vide entre les jours
-    }
+    const dayLines = formatReport({ guild, postsByDate });
     await sendInChunks(modChannel, dayLines);
   });
 }

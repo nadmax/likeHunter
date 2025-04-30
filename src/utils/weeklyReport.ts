@@ -3,6 +3,7 @@ import cron from 'node-cron';
 import {client} from './client'
 import { fetchMessagesSince } from './fetchMessagesSince';
 import { sendInChunks } from './sendInChunks';
+import { formatReport } from './reportFormatter';
 
 
 
@@ -45,94 +46,27 @@ export function weeklyReports(GUILD_ID:string, LINKEDIN_CHANNEL_ID:string, MODER
           if (!postsByDate.has(key)) postsByDate.set(key, { date, posts: [] });
           postsByDate.get(key)!.posts.push(p);
         });
-        // Affichage détaillé par jour
-        const dayLines: string[] = [];
+        // Calcul des stats globales semaine
         let totalWeekPosts = 0;
         let totalWeekReactions = 0;
         const weekUserReactionCount: Record<string, number> = {};
-        for (const { date, posts } of postsByDate.values()) {
-          const weekday = weekdayNames[date.getDay()];
-          const dateStr = `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`;
-          const nbPosts = posts.length;
-          let totalReactions = 0;
-          const userReactionCount: Record<string, number> = {};
+        for (const { posts } of postsByDate.values()) {
           posts.forEach(p => {
-            totalReactions += p.userIds.length;
-            totalWeekReactions += p.userIds.length;
             totalWeekPosts++;
+            totalWeekReactions += p.userIds.length;
             p.userIds.forEach(id => {
-              userReactionCount[id] = (userReactionCount[id] || 0) + 1;
               weekUserReactionCount[id] = (weekUserReactionCount[id] || 0) + 1;
             });
           });
-          const classement = Object.entries(userReactionCount).sort((a, b) => b[1] - a[1]);
-          // Classement ex aequo
-          let lastScore: number | null = null;
-          let lastRank = 0;
-          let realRank = 0;
-          dayLines.push(`\n📅 ${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${dateStr}`);
-          dayLines.push(`- Nombre de posts publiés : ${nbPosts}`);
-          dayLines.push(`- Nombre total de réactions : ${totalReactions}`);
-          dayLines.push(`Nombres de membres sur le serveur : ${guild.members.cache.filter(m => !m.user.bot).map(m => m.id).length}`);
-          dayLines.push(`\n🏆 Classement des ${Object.keys(userReactionCount).length} participants`);
-          if (classement.length === 0) {
-            dayLines.push('Aucun participant ce jour-là.');
-          } else {
-            classement.forEach(([id, c], idx) => {
-              realRank++;
-              if (c !== lastScore) {
-                lastRank = realRank;
-                lastScore = c;
-              }
-              dayLines.push(`${lastRank}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
-            });
-          }
-          dayLines.push(`\n👻 ${guild.members.cache.filter(m => !m.user.bot).map(m => m.id).length - Object.keys(userReactionCount).length} Membres inactifs`);
-          const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
-          const actifs = new Set(Object.keys(userReactionCount));
-          const inactifs = allMemberIds.filter(id => !actifs.has(id));
-          if (inactifs.length === 0) {
-            dayLines.push('Aucun membre inactif ce jour-là.');
-          } else {
-            inactifs.forEach(id => dayLines.push(`- <@${id}>`));
-          }
-          dayLines.push('');
         }
-        // Récap global semaine
-        dayLines.push('\n============================');
-        dayLines.push('**Récapitulatif de la semaine**');
-        dayLines.push(`- Nombre total de posts : ${totalWeekPosts}`);
-        dayLines.push(`- Nombre total de réactions : ${totalWeekReactions}`);
-        dayLines.push(`Nombres de membres sur le serveur : ${guild.members.cache.filter(m => !m.user.bot).map(m => m.id).length}`);
-        // Classement global semaine
-        const classementSemaine = Object.entries(weekUserReactionCount).sort((a, b) => b[1] - a[1]);
-        let lastScoreSemaine: number | null = null;
-        let lastRankSemaine = 0;
-        let realRankSemaine = 0;
-        dayLines.push(`\n🏆 Classement des ${Object.keys(weekUserReactionCount).length} participants (semaine)`);
-        if (classementSemaine.length === 0) {
-          dayLines.push('Aucun participant cette semaine.');
-        } else {
-          classementSemaine.forEach(([id, c], idx) => {
-            realRankSemaine++;
-            if (c !== lastScoreSemaine) {
-              lastRankSemaine = realRankSemaine;
-              lastScoreSemaine = c;
-            }
-            dayLines.push(`${lastRankSemaine}. <@${id}> : ${c} réaction${c > 1 ? 's' : ''}`);
-          });
-        }
-        // Membres inactifs semaine
-        const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
-        const actifsSemaine = new Set(Object.keys(weekUserReactionCount));
-        const inactifsSemaine = allMemberIds.filter(id => !actifsSemaine.has(id));
-        dayLines.push(`\n👻 ${guild.members.cache.filter(m => !m.user.bot).map(m => m.id).length - Object.keys(weekUserReactionCount).length} Membres inactifs (semaine)`);
-        if (inactifsSemaine.length === 0) {
-          dayLines.push('Aucun membre inactif cette semaine.');
-        } else {
-          inactifsSemaine.forEach(id => dayLines.push(`- <@${id}>`));
-        }
-        dayLines.push('============================');
+        const dayLines = formatReport({
+          guild,
+          postsByDate,
+          weekUserReactionCount,
+          totalWeekPosts,
+          totalWeekReactions,
+          isWeeklyRecap: true
+        });
         await sendInChunks(modChannel, dayLines);
       });
 }
