@@ -5,6 +5,7 @@
   "scripts": {
     "clean": "rm -rf node_modules package-lock.jon",
     "start": "npx ts-node src/index.ts",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
