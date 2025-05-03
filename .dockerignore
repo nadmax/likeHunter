@@ -1,0 +1,11 @@
+node_modules
+.git
+.gitignore
+README.md
+LICENSE
+.env.example
+
+!Dockerfile
+!.dockerignore
+!src/
+!.env
