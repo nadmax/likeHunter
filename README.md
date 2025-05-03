@@ -30,6 +30,19 @@ pm2 start dist/index.js --name discord-bot
 - PM2 (process manager)
 - Discord bot token (from [Discord Developer Portal](https://discord.com/developers/applications))
 
+## 🛠️ Discord Bot Configuration
+
+Before running the bot, make sure you have properly configured your application in the [Discord Developer Portal](https://discord.com/developers/applications):
+
+1. Go to the **Bot** tab of your application.
+2. Enable the following options in the **Privileged Gateway Intents** section:
+   - **PRESENCE INTENT**
+   - **SERVER MEMBERS INTENT**
+   - **MESSAGE CONTENT INTENT**
+3. Copy your bot **Token** and paste it into your `.env` file.
+
+> These options are required for the bot to read messages, track presences, and access the server member list.
+
 ## 🔑 Environment Variables
 
 Create a `.env` file with the following variables:
@@ -95,9 +108,9 @@ This license ensures that:
 
 ## 🚀 Production avec PM2
 
-Pour lancer le bot en production avec pm2 :
+Pour lancer le bot en production avec pm2 :
 
-- **Avec TypeScript direct (recommandé si tu utilises tsx ou ts-node) :**
+- **Avec TypeScript direct (recommandé si tu utilises tsx ou ts-node) :**
   ```bash
   pm2 start src/index.ts --interpreter tsx --name discord-bot
   ```
@@ -106,27 +119,27 @@ Pour lancer le bot en production avec pm2 :
   pm2 start src/index.ts --interpreter ts-node --name discord-bot
   ```
 
-- **Avec le code compilé (optionnel, si tu veux compiler en JS) :**
+- **Avec le code compilé (optionnel, si tu veux compiler en JS) :**
   ```bash
   npm run build
   pm2 start dist/index.js --name discord-bot
   ```
 
-> **Remarque** : Le build (`npm run build`) n’est utile que si tu veux exécuter le JS compilé (dossier `dist/`).
+> **Remarque** : Le build (`npm run build`) n'est utile que si tu veux exécuter le JS compilé (dossier `dist/`).
 > Sinon, tu peux utiliser directement le code TypeScript avec `ts-node` ou `tsx`.
 
 ---
 
 ### Ce que tu peux écrire dans le README
 
-Voici un exemple de section à ajouter ou à remplacer :
+Voici un exemple de section à ajouter ou à remplacer :
 
 ```md
 ## 🚀 Lancement
 
 ### En développement
 
-Lance le bot directement en TypeScript :
+Lance le bot directement en TypeScript :
 ```bash
 pnpm start
 ```
@@ -137,7 +150,7 @@ npm start
 
 ### En production avec PM2
 
-**Avec TypeScript direct (recommandé) :**
+**Avec TypeScript direct (recommandé) :**
 ```bash
 pm2 start src/index.ts --interpreter tsx --name discord-bot
 ```
@@ -146,13 +159,13 @@ ou
 pm2 start src/index.ts --interpreter ts-node --name discord-bot
 ```
 
-**Avec le code compilé (optionnel) :**
+**Avec le code compilé (optionnel) :**
 ```bash
 npm run build
 pm2 start dist/index.js --name discord-bot
 ```
 
-> Le build n’est utile que si tu veux exécuter le JS compilé.
+> Le build n'est utile que si tu veux exécuter le JS compilé.
 ```
 
 ---
@@ -160,9 +173,9 @@ pm2 start dist/index.js --name discord-bot
 ### En résumé
 
 - **Tu peux documenter les deux méthodes** (TypeScript direct ou JS compilé).
-- **Le build n’est pas obligatoire** si tu utilises `ts-node` ou `tsx` partout.
-- **Tu peux rassurer les utilisateurs** : les deux méthodes sont valides, à eux de choisir selon leur préférence.
+- **Le build n'est pas obligatoire** si tu utilises `ts-node` ou `tsx` partout.
+- **Tu peux rassurer les utilisateurs** : les deux méthodes sont valides, à eux de choisir selon leur préférence.
 
 ---
 
-Veux-tu que je t’écrive le README complet avec ces sections prêtes à copier-coller ?
+Veux-tu que je t'écrive le README complet avec ces sections prêtes à copier-coller ?
