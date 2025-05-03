@@ -1,0 +1,6 @@
+services:
+  like-hunter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
