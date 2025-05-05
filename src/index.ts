@@ -24,6 +24,7 @@ import { sendInChunks } from './utils/sendInChunks';
 import { dailyReport } from './utils/dailyReport';
 import { weeklyReports } from './utils/weeklyReport';
 import { formatReport } from './utils/reportFormatter';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 
 dotenv.config();
 
@@ -156,9 +157,33 @@ client.once('ready', async () => {
       }
       await sendInChunks(modChannel, dayLines);
     }
+
+    const GENERAL_CHANNEL_ID = process.env.GENERAL_CHANNEL_ID!;
+    if (message.channel.id === GENERAL_CHANNEL_ID && message.content === '!vacances' && !message.author.bot) {
+      let vacances = getVacancesList();
+      if (vacances.includes(message.author.id)) {
+        vacances = vacances.filter(id => id !== message.author.id);
+        setVacancesList(vacances);
+        await message.reply('Bon retour ! Tu es de nouveau compté dans les stats.');
+      } else {
+        vacances.push(message.author.id);
+        setVacancesList(vacances);
+        await message.reply('Bonnes vacances ! Tu ne seras plus compté comme inactif.');
+      }
+      return;
+    }
   });
 
   weeklyReports(GUILD_ID, LINKEDIN_CHANNEL_ID, MODERATOR_CHANNEL_ID )
 });
 
 client.login(process.env.DISCORD_TOKEN);
+
+const VACANCES_FILE = './vacances.json';
+function getVacancesList(): string[] {
+  if (!existsSync(VACANCES_FILE)) return [];
+  return JSON.parse(readFileSync(VACANCES_FILE, 'utf-8'));
+}
+function setVacancesList(list: string[]) {
+  writeFileSync(VACANCES_FILE, JSON.stringify(list, null, 2), 'utf-8');
+}

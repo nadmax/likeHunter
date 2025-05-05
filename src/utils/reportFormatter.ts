@@ -1,4 +1,5 @@
 import { Guild, Message } from 'discord.js';
+import { existsSync, readFileSync } from 'fs';
 
 export type PostStat = { msg: Message; userIds: string[] };
 
@@ -9,6 +10,11 @@ export interface ReportFormatterOptions {
   totalWeekPosts?: number;
   totalWeekReactions?: number;
   isWeeklyRecap?: boolean;
+}
+
+function getVacancesList(): string[] {
+  if (!existsSync('./vacances.json')) return [];
+  return JSON.parse(readFileSync('./vacances.json', 'utf-8'));
 }
 
 export function formatReport({
@@ -35,8 +41,9 @@ export function formatReport({
     });
     const classement = Object.entries(userReactionCount).sort((a, b) => b[1] - a[1]);
     const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
+    const vacances = getVacancesList();
     const actifs = new Set(Object.keys(userReactionCount));
-    const inactifs = allMemberIds.filter(id => !actifs.has(id));
+    const inactifs = allMemberIds.filter(id => !actifs.has(id) && !vacances.includes(id));
     dayLines.push(`\n📅 ${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${dateStr}`);
     dayLines.push(`- Nombre de posts publiés : ${nbPosts}`);
     dayLines.push(`- Nombre total de réactions : ${totalReactions}`);
@@ -73,12 +80,22 @@ export function formatReport({
     } else {
       inactifs.forEach((id: string) => dayLines.push(`- <@${id}>`));
     }
+    // Affichage des vacanciers
+    const vacanciers = allMemberIds.filter(id => vacances.includes(id));
+    dayLines.push(`\n🌴 ${vacanciers.length} Membres en vacances`);
+    if (vacanciers.length === 0) {
+      dayLines.push('Aucun membre en vacances ce jour-là.');
+    } else {
+      vacanciers.forEach((id: string) => dayLines.push(`- <@${id}>`));
+    }
     dayLines.push('');
   }
+  // === Section récapitulatif hebdo ===
   if (isWeeklyRecap) {
     const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
+    const vacances = getVacancesList();
     const actifsSemaine = new Set(Object.keys(weekUserReactionCount));
-    const inactifsSemaine = allMemberIds.filter(id => !actifsSemaine.has(id));
+    const inactifsSemaine = allMemberIds.filter(id => !actifsSemaine.has(id) && !vacances.includes(id));
     dayLines.push('\n============================');
     dayLines.push('**Récapitulatif de la semaine**');
     dayLines.push(`- Nombre total de posts : ${totalWeekPosts}`);
@@ -115,6 +132,14 @@ export function formatReport({
       dayLines.push('Aucun membre inactif cette semaine.');
     } else {
       inactifsSemaine.forEach(id => dayLines.push(`- <@${id}>`));
+    }
+    // Affichage des vacanciers semaine
+    const vacanciersSemaine = allMemberIds.filter(id => vacances.includes(id));
+    dayLines.push(`\n🌴 ${vacanciersSemaine.length} Membres en vacances (semaine)`);
+    if (vacanciersSemaine.length === 0) {
+      dayLines.push('Aucun membre en vacances cette semaine.');
+    } else {
+      vacanciersSemaine.forEach(id => dayLines.push(`- <@${id}>`));
     }
     dayLines.push('============================');
   }
