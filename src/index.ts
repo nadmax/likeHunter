@@ -46,6 +46,21 @@ client.once('ready', async () => {
   client.on('messageCreate', async message => {
     console.log('[DEBUG] Message reçu:', message.content, 'dans le salon:', message.channel.id);
 
+    const GENERAL_CHANNEL_ID = process.env.GENERAL_CHANNEL_ID!;
+    if (message.channel.id === GENERAL_CHANNEL_ID && message.content === '!vacances' && !message.author.bot) {
+      let vacances = getVacancesList();
+      if (vacances.includes(message.author.id)) {
+        vacances = vacances.filter(id => id !== message.author.id);
+        setVacancesList(vacances);
+        await message.reply('Bon retour ! Tu es de nouveau compté dans les stats.');
+      } else {
+        vacances.push(message.author.id);
+        setVacancesList(vacances);
+        await message.reply('Bonnes vacances ! Tu ne seras plus compté comme inactif.');
+      }
+      return;
+    }
+
     if (message.channel.id !== MODERATOR_CHANNEL_ID) {
       console.log('[DEBUG] Mauvais salon. Attendu:', MODERATOR_CHANNEL_ID, 'Reçu:', message.channel.id);
       return;
@@ -156,21 +171,6 @@ client.once('ready', async () => {
         dayLines = formatReport({ guild, postsByDate });
       }
       await sendInChunks(modChannel, dayLines);
-    }
-
-    const GENERAL_CHANNEL_ID = process.env.GENERAL_CHANNEL_ID!;
-    if (message.channel.id === GENERAL_CHANNEL_ID && message.content === '!vacances' && !message.author.bot) {
-      let vacances = getVacancesList();
-      if (vacances.includes(message.author.id)) {
-        vacances = vacances.filter(id => id !== message.author.id);
-        setVacancesList(vacances);
-        await message.reply('Bon retour ! Tu es de nouveau compté dans les stats.');
-      } else {
-        vacances.push(message.author.id);
-        setVacancesList(vacances);
-        await message.reply('Bonnes vacances ! Tu ne seras plus compté comme inactif.');
-      }
-      return;
     }
   });
 
