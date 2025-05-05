@@ -7,7 +7,7 @@ import { formatReport } from './reportFormatter';
 
 export function dailyReport (GUILD_ID: string, LINKEDIN_CHANNEL_ID: string, MODERATOR_CHANNEL_ID: string): void {
 
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('30 4 * * *', async () => {
     const guild = await client.guilds.fetch(GUILD_ID);
     await guild.members.fetch();
     const postChannel = await client.channels.fetch(LINKEDIN_CHANNEL_ID) as TextChannel;
