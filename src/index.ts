@@ -82,14 +82,13 @@ client.once('ready', async () => {
         description = "Statistiques des dernières 24h";
         console.log(`[DEBUG] ${description} - messages filtrés:`);
       } else if (message.content === '!scan semaine') {
-        // Début de la semaine (vendredi précédent à 18h)
+        // Les 7 derniers jours à partir de maintenant
         const now = new Date();
-        const day = now.getDay();
-        const daysSinceFriday = (day + 7 - 5) % 7; // 5 = vendredi
-        const lastFriday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceFriday, 18, 0, 0, 0);
-        since = lastFriday.getTime();
-        description = "Statistiques de la semaine";
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        since = oneWeekAgo.getTime();
+        description = "Statistiques de la semaine (7 derniers jours)";
         console.log(`[DEBUG] ${description} - messages filtrés:`);
+        console.log(`[DEBUG] Période analysée (semaine) : du ${oneWeekAgo.toISOString()} (${oneWeekAgo.getTime()}) au ${now.toISOString()} (${now.getTime()})`);
       }
       // Récupération des messages
       const allMessages = await fetchMessagesSince(postChannel, since!);

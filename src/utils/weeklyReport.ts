@@ -15,13 +15,12 @@ export function weeklyReports(GUILD_ID:string, LINKEDIN_CHANNEL_ID:string, MODER
         const postChannel = await client.channels.fetch(LINKEDIN_CHANNEL_ID) as TextChannel;
         const modChannel = await client.channels.fetch(MODERATOR_CHANNEL_ID) as TextChannel;
 
-        // Début de la semaine (vendredi précédent à 18h)
+        // Les 7 derniers jours à partir de maintenant
         const now = new Date();
-        const day = now.getDay();
-        const daysSinceFriday = (day + 7 - 5) % 7; // 5 = vendredi
-        const lastFriday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceFriday, 18, 0, 0, 0);
-        const startOfWeek = lastFriday.getTime();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const startOfWeek = oneWeekAgo.getTime();
         const messages = await fetchMessagesSince(postChannel, startOfWeek);
+        console.log(`[DEBUG] Rapport hebdo : période analysée du ${oneWeekAgo.toISOString()} (${oneWeekAgo.getTime()}) au ${now.toISOString()} (${now.getTime()})`);
         // On ne garde que les messages avec un lien
         const urlRegex = /https?:\/\//;
         const filteredMessages = messages.filter(m => urlRegex.test(m.content));

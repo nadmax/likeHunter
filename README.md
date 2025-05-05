@@ -43,20 +43,6 @@ Before running the bot, make sure you have properly configured your application 
 
 > These options are required for the bot to read messages, track presences, and access the server member list.
 
-## 🔑 Environment Variables
-
-Create a `.env` file with the following variables:
-
-# Discord Bot Token (from Discord Developer Portal)
-DISCORD_TOKEN=your_discord_bot_token
-
-# Discord Server (Guild) ID
-GUILD_ID=123456789012345678
-
-# Channel IDs
-LINKEDIN_CHANNEL_ID=123456789012345678  # Channel for sharing LinkedIn posts
-MODERATOR_CHANNEL_ID=123456789012345678 # Channel for receiving reports
-
 ## 💻 Commands
 
 The bot responds to the following commands in the moderator channel:
