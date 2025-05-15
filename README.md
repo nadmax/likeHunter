@@ -11,7 +11,7 @@ A Discord bot that tracks and analyzes LinkedIn posts shared in a dedicated chan
 - Identifies members who haven't reacted to posts
 
 ## 🚀 Installation
-
+If you want to locally run the bot, follow these steps:  
 1. Clone this repository
 2. Install dependencies: `npm install`
 3. Create a `.env` file based on `.env.example`
@@ -29,11 +29,22 @@ pm2 start dist/index.js --name discord-bot
 
 > **Note:** Always use the compiled code (`dist/index.js`) in production for better performance and stability.
 
+## 🐳 Docker
+A ``compose.yaml`` file is included for an easy setup.  
+Run the bot with the following command:
+```bash
+docker compose up -d
+```
+
+⚠️ You need to create the ``.env`` file before running the above command!  
+Otherwise you will get an error.
+
 ## ⚙️ Prerequisites
 
 - Node.js (>=16)
 - npm or yarn
 - PM2 (process manager)
+- Docker
 - Discord bot token (from [Discord Developer Portal](https://discord.com/developers/applications))
 
 ## 🛠️ Discord Bot Configuration
