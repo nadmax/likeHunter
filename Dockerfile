@@ -9,7 +9,6 @@ FROM node:22-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
-COPY --from=builder /app/dist ./dist
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
-CMD ["node", "dist/index.js"]
+COPY --from=builder /app/build ./build
+CMD ["node", "build/deploy-commands.js"]
+ENTRYPOINT ["node", "build/index.js"]
