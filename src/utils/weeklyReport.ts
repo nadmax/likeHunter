@@ -1,19 +1,18 @@
 import { TextChannel, Message } from 'discord.js';
 import cron from 'node-cron';
-import {client} from './client'
+import { client } from './client'
 import { fetchMessagesSince } from './fetchMessagesSince';
 import { sendInChunks } from './sendInChunks';
 import { formatReport } from './reportFormatter';
 
 
-
-
-export function weeklyReports(GUILD_ID:string, LINKEDIN_CHANNEL_ID:string, MODERATOR_CHANNEL_ID:string ) {
+export function weeklyReports(guildID: string, linkedInChannelID: string, destinationChannelID: string) {
     cron.schedule('0 18 * * 5', async () => {
-        const guild = await client.guilds.fetch(GUILD_ID);
+        const guild = await client.guilds.fetch(guildID);
         await guild.members.fetch();
-        const postChannel = await client.channels.fetch(LINKEDIN_CHANNEL_ID) as TextChannel;
-        const modChannel = await client.channels.fetch(MODERATOR_CHANNEL_ID) as TextChannel;
+
+        const postChannel = await client.channels.fetch(linkedInChannelID) as TextChannel;
+        const destChannel = await client.channels.fetch(destinationChannelID) as TextChannel;
 
         // Les 7 derniers jours à partir de maintenant
         const now = new Date();
@@ -21,51 +20,57 @@ export function weeklyReports(GUILD_ID:string, LINKEDIN_CHANNEL_ID:string, MODER
         const startOfWeek = oneWeekAgo.getTime();
         const messages = await fetchMessagesSince(postChannel, startOfWeek);
         console.log(`[DEBUG] Rapport hebdo : période analysée du ${oneWeekAgo.toISOString()} (${oneWeekAgo.getTime()}) au ${now.toISOString()} (${now.getTime()})`);
+        
         // On ne garde que les messages avec un lien
         const urlRegex = /https?:\/\//;
         const filteredMessages = messages.filter(m => urlRegex.test(m.content));
+        
         // On regroupe les posts par jour
         const postsStats: { msg: Message; userIds: string[] }[] = [];
         for (const msg of filteredMessages) {
-          const checkReaction = msg.reactions.cache.get('✅');
-          let userIds: string[] = [];
-          if (checkReaction) {
-            const users = await checkReaction.users.fetch();
-            userIds.push(...Array.from(users.values()).filter(u => !u.bot).map(u => u.id));
-          }
-          userIds = Array.from(new Set(userIds));
-          postsStats.push({ msg, userIds });
+            const checkReaction = msg.reactions.cache.get('✅');
+            let userIds: string[] = [];
+            if (checkReaction) {
+                const users = await checkReaction.users.fetch();
+                userIds.push(...Array.from(users.values()).filter(u => !u.bot).map(u => u.id));
+            }
+            userIds = Array.from(new Set(userIds));
+            postsStats.push({ msg, userIds });
         }
+
         // Regroupement par jour
-        const weekdayNames = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
         const postsByDate = new Map<string, { date: Date; posts: typeof postsStats }>();
         postsStats.forEach(p => {
-          const date = new Date(p.msg.createdTimestamp);
-          const key = date.toISOString().split('T')[0];
-          if (!postsByDate.has(key)) postsByDate.set(key, { date, posts: [] });
-          postsByDate.get(key)!.posts.push(p);
+            const date = new Date(p.msg.createdTimestamp);
+            const key = date.toISOString().split('T')[0];
+            if (!postsByDate.has(key)) {
+                postsByDate.set(key, { date, posts: [] });
+            }
+            postsByDate.get(key)!.posts.push(p);
         });
+        
         // Calcul des stats globales semaine
         let totalWeekPosts = 0;
         let totalWeekReactions = 0;
         const weekUserReactionCount: Record<string, number> = {};
         for (const { posts } of postsByDate.values()) {
-          posts.forEach(p => {
-            totalWeekPosts++;
-            totalWeekReactions += p.userIds.length;
-            p.userIds.forEach(id => {
-              weekUserReactionCount[id] = (weekUserReactionCount[id] || 0) + 1;
+            posts.forEach(p => {
+                totalWeekPosts++;
+                totalWeekReactions += p.userIds.length;
+                p.userIds.forEach(id => {
+                    weekUserReactionCount[id] = (weekUserReactionCount[id] || 0) + 1;
+                });
             });
-          });
         }
+
         const dayLines = formatReport({
-          guild,
-          postsByDate,
-          weekUserReactionCount,
-          totalWeekPosts,
-          totalWeekReactions,
-          isWeeklyRecap: true
+            guild,
+            postsByDate,
+            weekUserReactionCount,
+            totalWeekPosts,
+            totalWeekReactions,
+            isWeeklyRecap: true
         });
-        await sendInChunks(modChannel, dayLines);
-      });
+        await sendInChunks(destChannel, dayLines);
+    });
 }
