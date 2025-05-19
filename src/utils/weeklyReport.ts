@@ -7,24 +7,34 @@ import { formatReport } from './reportFormatter';
 
 
 export function weeklyReports(guildID: string, linkedInChannelID: string, destinationChannelID: string) {
-    cron.schedule('0 18 * * 5', async () => {
+    cron.schedule('30 22 * * 5', async () => {
         const guild = await client.guilds.fetch(guildID);
         await guild.members.fetch();
 
         const postChannel = await client.channels.fetch(linkedInChannelID) as TextChannel;
         const destChannel = await client.channels.fetch(destinationChannelID) as TextChannel;
 
-        // Les 7 derniers jours à partir de maintenant
+        // Calcul de la période (lundi 00h00 à vendredi 22h30)
         const now = new Date();
-        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const startOfWeek = oneWeekAgo.getTime();
-        const messages = await fetchMessagesSince(postChannel, startOfWeek);
-        console.log(`[DEBUG] Rapport hebdo : période analysée du ${oneWeekAgo.toISOString()} (${oneWeekAgo.getTime()}) au ${now.toISOString()} (${now.getTime()})`);
-        
+        const currentDay = now.getDay(); // 0 = dimanche, 1 = lundi, ..., 5 = vendredi
+        const daysToSubtract = currentDay === 0 ? 6 : currentDay - 1; // Nombre de jours à reculer pour atteindre lundi
+
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - daysToSubtract);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const messages = await fetchMessagesSince(postChannel, startOfWeek.getTime());
+        console.log(`[DEBUG] Rapport hebdo : période analysée du ${startOfWeek.toISOString()} au ${now.toISOString()}`);
+
         // On ne garde que les messages avec un lien
         const urlRegex = /https?:\/\//;
-        const filteredMessages = messages.filter(m => urlRegex.test(m.content));
-        
+        const filteredMessages = messages.filter(m => {
+            const messageDate = new Date(m.createdTimestamp);
+            const day = messageDate.getDay();
+            // Ne garder que les jours de semaine (1-5)
+            return urlRegex.test(m.content) && day >= 1 && day <= 5;
+        });
+
         // On regroupe les posts par jour
         const postsStats: { msg: Message; userIds: string[] }[] = [];
         for (const msg of filteredMessages) {
@@ -48,7 +58,7 @@ export function weeklyReports(guildID: string, linkedInChannelID: string, destin
             }
             postsByDate.get(key)!.posts.push(p);
         });
-        
+
         // Calcul des stats globales semaine
         let totalWeekPosts = 0;
         let totalWeekReactions = 0;

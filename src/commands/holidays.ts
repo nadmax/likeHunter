@@ -7,7 +7,13 @@ export const holidaysCmd = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     const GENERAL_CHANNEL_ID = process.env.GENERAL_CHANNEL_ID!;
-    if (interaction.channelId !== GENERAL_CHANNEL_ID) {
+    const TEST_CHANNEL_ID = process.env.TEST_CHANNEL_ID!;
+    console.log('[DEBUG] Vérification du salon:');
+    console.log('[DEBUG] Salon actuel:', interaction.channelId);
+    console.log('[DEBUG] Salon attendu (GENERAL_CHANNEL_ID):', GENERAL_CHANNEL_ID);
+    console.log('[DEBUG] Les deux sont-ils égaux?', interaction.channelId === GENERAL_CHANNEL_ID);
+
+    if (interaction.channelId !== GENERAL_CHANNEL_ID && interaction.channelId !== TEST_CHANNEL_ID) {
         await interaction.reply({ content: '⛔ Cette commande doit être utilisée dans le salon général.', ephemeral: true });
         return;
     }
@@ -23,6 +29,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     } else {
         holidays.push(userId);
         setHolidaysList(holidays);
-        await interaction.reply('Bonnes vacances ! Tu ne seras plus compté comme inactif.');
+        await interaction.reply('🌴 Bonnes vacances ! Tu ne seras plus compté comme inactif.');
     }
 }

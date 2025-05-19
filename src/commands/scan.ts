@@ -2,6 +2,7 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, TextChannel } from 'd
 import { fetchMessagesSince } from '../utils/fetchMessagesSince';
 import { sendInChunks } from '../utils/sendInChunks';
 import { formatReport } from '../utils/reportFormatter';
+import { AVAILABLE_TEST_IDS } from '../utils/test';
 
 export const scanCmd = new SlashCommandBuilder()
     .setName('scan')
@@ -16,15 +17,19 @@ export const scanCmd = new SlashCommandBuilder()
 export async function execute(interaction: ChatInputCommandInteraction) {
     const period = interaction.options.getString('période');
     const MODERATOR_CHANNEL_ID = process.env.MODERATOR_CHANNEL_ID!;
+    const TEST_CHANNEL_ID = process.env.TEST_CHANNEL_ID!;
     const LINKEDIN_CHANNEL_ID = process.env.LINKEDIN_CHANNEL_ID!;
 
-    if (interaction.channelId !== MODERATOR_CHANNEL_ID) {
+    if (interaction.channelId !== MODERATOR_CHANNEL_ID && interaction.channelId !== TEST_CHANNEL_ID) {
         await interaction.reply({ content: '⛔ Cette commande est réservée au salon modérateur.', ephemeral: true });
         return;
     }
 
     const member = await interaction.guild?.members.fetch(interaction.user.id);
-    if (!member?.roles.cache.some(role => role.name.toLowerCase() === 'le_dalleu')) {
+    const isTestMember = AVAILABLE_TEST_IDS.includes(interaction.user.id);
+    const hasDalleuRole = member?.roles.cache.some(role => role.name.toLowerCase() === 'le_dalleu');
+
+    if (!isTestMember && !hasDalleuRole) {
         await interaction.reply({ content: '⛔ Seuls les administrateurs peuvent utiliser cette commande.', ephemeral: true });
         return;
     }
