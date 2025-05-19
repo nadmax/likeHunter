@@ -5,6 +5,6 @@ client.on('messageCreate', async message => {
     // Ignorer les messages des bots
     if (message.author.bot) return;
 
-    // Gérer les commandes secrètes
+    // Gérer les commandes de tests
     handleTestCommand(message);
 });
