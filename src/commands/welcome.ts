@@ -13,11 +13,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return;
         }
 
+
         const ROLE_ID = process.env.GLADALLE_ROLE_ID;
         const CHANNEL_ID = process.env.WELCOME_CHANNEL_ID;
 
         if (!ROLE_ID || !CHANNEL_ID) {
             await interaction.reply({ content: '❌ Les variables d\'environnement GLADALLE_ROLE_ID et WELCOME_CHANNEL_ID doivent être configurées.', ephemeral: true });
+
             return;
         }
 
@@ -60,6 +62,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
     if (interaction.customId !== 'get_role') return;
 
     try {
+
         const ROLE_ID = process.env.GLADALLE_ROLE_ID;
         if (!ROLE_ID) {
             await interaction.reply({ content: '❌ Configuration manquante pour le rôle G_La_Dalle.', ephemeral: true });
