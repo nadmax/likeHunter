@@ -7,7 +7,6 @@ export const setupCmd = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     try {
-        // Vérification des permissions
         const member = interaction.member as GuildMember;
         if (!member || !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             await interaction.reply({ content: '⛔ Vous n\'avez pas les permissions nécessaires pour utiliser cette commande.', ephemeral: true });
