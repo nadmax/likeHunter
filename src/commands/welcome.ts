@@ -6,7 +6,6 @@ export const welcomeCmd = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
     try {
-        // Vérification des permissions
         const member = interaction.member as GuildMember;
         if (!member || !member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             await interaction.reply({ content: '⛔ Vous n\'avez pas les permissions nécessaires pour utiliser cette commande.', ephemeral: true });
@@ -19,7 +18,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
         if (!ROLE_ID || !CHANNEL_ID) {
             await interaction.reply({ content: '❌ Les variables d\'environnement GLADALLE_ROLE_ID et WELCOME_CHANNEL_ID doivent être configurées.', ephemeral: true });
-
             return;
         }
 
@@ -42,9 +40,8 @@ export async function sendWelcomeMessage(channel: TextChannel) {
     try {
         const bouton = new ButtonBuilder()
             .setCustomId('get_role')
-            .setLabel('J\'ai la dalle et je vais participer ou me faire ban sinon')
+            .setLabel('J\'ai la dalle et je veux participer (sinon je me fais ban)')
             .setStyle(ButtonStyle.Primary);
-
         const row = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(bouton);
 
@@ -58,11 +55,13 @@ export async function sendWelcomeMessage(channel: TextChannel) {
 }
 
 export async function handleButtonInteraction(interaction: ButtonInteraction) {
-    if (!interaction.isButton()) return;
-    if (interaction.customId !== 'get_role') return;
+    if (!interaction.isButton()) {
+        return;
+    } else if (interaction.customId !== 'get_role') {
+        return;
+    }
 
     try {
-
         const ROLE_ID = process.env.GLADALLE_ROLE_ID;
         if (!ROLE_ID) {
             await interaction.reply({ content: '❌ Configuration manquante pour le rôle G_La_Dalle.', ephemeral: true });
@@ -81,7 +80,6 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
             return;
         }
 
-        // Vérifier si l'utilisateur a déjà le rôle
         if (member.roles.cache.has(ROLE_ID)) {
             await interaction.reply({ content: 'ℹ️ Vous avez déjà le rôle G_La_Dalle !', ephemeral: true });
             return;
