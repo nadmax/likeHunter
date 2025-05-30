@@ -12,24 +12,22 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return;
         }
 
-
-        const ROLE_ID = process.env.GLADALLE_ROLE_ID;
+        const ROLE_ID = process.env.MEMBER_ROLE_ID;
         const CHANNEL_ID = process.env.WELCOME_CHANNEL_ID;
-
         if (!ROLE_ID || !CHANNEL_ID) {
-            await interaction.reply({ content: '❌ Les variables d\'environnement GLADALLE_ROLE_ID et WELCOME_CHANNEL_ID doivent être configurées.', ephemeral: true });
+            await interaction.reply({ content: `❌ Le salon d'accueil et le rôle G_La_Dalle sont introuvables.`, ephemeral: true });
             return;
         }
 
         const channel = await interaction.guild?.channels.fetch(CHANNEL_ID);
         if (!channel || !(channel instanceof TextChannel)) {
-            await interaction.reply({ content: '❌ Le salon de bienvenue n\'a pas été trouvé ou n\'est pas un salon texte.', ephemeral: true });
+            await interaction.reply({ content: '❌ Le salon de bienvenue n\'a pas été trouvé ou n\'est pas un salon textuel.', ephemeral: true });
             return;
         }
 
         await sendWelcomeMessage(channel);
 
-        await interaction.reply({ content: '✅ Le message de bienvenue a été configuré avec succès !', ephemeral: true });
+        await interaction.reply({ content: '✅ Le message de bienvenue a été configuré avec succès!', ephemeral: true });
     } catch (error) {
         console.error('Erreur lors de la configuration du message de bienvenue:', error);
         await interaction.reply({ content: '❌ Une erreur est survenue lors de la configuration du message de bienvenue.', ephemeral: true });
@@ -62,7 +60,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
     }
 
     try {
-        const ROLE_ID = process.env.GLADALLE_ROLE_ID;
+        const ROLE_ID = process.env.MEMBER_ROLE_ID;
         if (!ROLE_ID) {
             await interaction.reply({ content: '❌ Configuration manquante pour le rôle G_La_Dalle.', ephemeral: true });
             return;

@@ -20,10 +20,8 @@ export function formatReport({
     totalWeekReactions = 0,
     isWeeklyRecap = false,
 }: ReportFormatterOptions): string[] {
-    const weekdayNames = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+    const weekdayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi','vendredi', 'samedi'];
     const dayLines: string[] = [];
-
-    // Calcul des likes reçus par chaque membre
     const likesReceived: Record<string, number> = {};
     for (const { posts } of postsByDate.values()) {
         posts.forEach(p => {
@@ -55,14 +53,11 @@ export function formatReport({
         dayLines.push(`- Nombre de posts publiés : ${nbPosts}`);
         dayLines.push(`- Nombre total de réactions : ${totalReactions}`);
         dayLines.push(`Nombres de membres sur le serveur : ${allMemberIds.length}`);
-
-        // Légende des indicateurs
         dayLines.push('\n📊 Légende des indicateurs :');
         dayLines.push('💩 : Reçoit plus de likes qu\'il n\'en donne (ratio < 0.5)');
         dayLines.push('❤️ : Donne plus de likes qu\'il n\'en reçoit (ratio > 2)');
         dayLines.push('➖ : Ratio équilibré (entre 0.5 et 2)');
         dayLines.push('👻 : Membre inactif (aucun like donné)');
-
         dayLines.push(`\n🏆 Classement des ${actifs.size} participants`);
         if (ranking.length === 0) {
             dayLines.push('Aucun participant ce jour-là.');
@@ -102,7 +97,6 @@ export function formatReport({
             inactifs.forEach((id: string) => dayLines.push(`- <@${id}>`));
         }
 
-        // Affichage des vacanciers
         const holidaymakers = allMemberIds.filter(id => vacances.includes(id));
         dayLines.push(`\n🌴 ${holidaymakers.length} Membres en vacances`);
         if (holidaymakers.length === 0) {
@@ -114,7 +108,6 @@ export function formatReport({
         dayLines.push('');
     }
 
-    // === Section récapitulatif hebdo ===
     if (isWeeklyRecap) {
         const allMemberIds = guild.members.cache.filter(m => !m.user.bot).map(m => m.id);
         const holidays = getHolidaysList();
@@ -126,8 +119,6 @@ export function formatReport({
         dayLines.push(`- Nombre total de posts : ${totalWeekPosts}`);
         dayLines.push(`- Nombre total de réactions : ${totalWeekReactions}`);
         dayLines.push(`Nombres de membres sur le serveur : ${allMemberIds.length}`);
-
-        // Légende des indicateurs pour le récapitulatif hebdo
         dayLines.push('\n📊 Légende des indicateurs :');
         dayLines.push('💩 : Reçoit plus de likes qu\'il n\'en donne (ratio < 0.5)');
         dayLines.push('❤️ : Donne plus de likes qu\'il n\'en reçoit (ratio > 2)');
@@ -173,7 +164,6 @@ export function formatReport({
             inactiveOfTheWeek.forEach(id => dayLines.push(`- <@${id}>`));
         }
 
-        // Affichage des vacanciers de la semaine
         const holidaymakersOfTheWeek = allMemberIds.filter(id => holidays.includes(id));
         dayLines.push(`\n🌴 ${holidaymakersOfTheWeek.length} Membres en vacances (semaine)`);
         if (holidaymakersOfTheWeek.length === 0) {

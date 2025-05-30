@@ -9,7 +9,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const GENERAL_CHANNEL_ID = process.env.GENERAL_CHANNEL_ID!;
     const TEST_CHANNEL_ID = process.env.TEST_CHANNEL_ID!;
     const LINKEDIN_CHANNEL_ID = process.env.LINKEDIN_CHANNEL_ID!;
-    const MEMBER_ROLE_ID = process.env.GLADALLE_ROLE_ID!;
+    const MEMBER_ROLE_ID = process.env.MEMBER_ROLE_ID!;
     const HOLIDAYS_ROLE_ID = process.env.HOLIDAYS_ROLE_ID!;
     if (interaction.channelId !== GENERAL_CHANNEL_ID && interaction.channelId !== TEST_CHANNEL_ID) {
         await interaction.reply({ content: '⛔ Cette commande doit être utilisée dans le salon général.', ephemeral: true });

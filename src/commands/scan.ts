@@ -2,7 +2,6 @@ import { SlashCommandBuilder, ChatInputCommandInteraction, TextChannel } from 'd
 import { fetchMessagesSince } from '../utils/fetchMessagesSince';
 import { sendInChunks } from '../utils/sendInChunks';
 import { formatReport } from '../utils/reportFormatter';
-import { AVAILABLE_TEST_IDS } from '../utils/test';
 
 export const scanCmd = new SlashCommandBuilder()
     .setName('scan')
@@ -19,17 +18,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const MODERATOR_CHANNEL_ID = process.env.MODERATOR_CHANNEL_ID!;
     const TEST_CHANNEL_ID = process.env.TEST_CHANNEL_ID!;
     const LINKEDIN_CHANNEL_ID = process.env.LINKEDIN_CHANNEL_ID!;
-
+    const MODERATOR_ROLE_ID = process.env.MODERATOR_ROLE_ID!;
     if (interaction.channelId !== MODERATOR_CHANNEL_ID && interaction.channelId !== TEST_CHANNEL_ID) {
         await interaction.reply({ content: '⛔ Cette commande est réservée au salon modérateur.', ephemeral: true });
         return;
     }
 
     const member = await interaction.guild?.members.fetch(interaction.user.id);
-    const isTestMember = AVAILABLE_TEST_IDS.includes(interaction.user.id);
-    const hasDalleuRole = member?.roles.cache.some(role => role.name.toLowerCase() === 'le_dalleu');
-
-    if (!isTestMember && !hasDalleuRole) {
+    const hasModeratorRole = member?.roles.cache.some(role => role.id === MODERATOR_ROLE_ID);
+    if (!hasModeratorRole) {
         await interaction.reply({ content: '⛔ Seuls les administrateurs peuvent utiliser cette commande.', ephemeral: true });
         return;
     }
@@ -40,10 +37,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const since = period === 'jour'
         ? now.getTime() - 24 * 60 * 60 * 1000
         : now.getTime() - 7 * 24 * 60 * 60 * 1000;
-
     const postChannel = await interaction.client.channels.fetch(LINKEDIN_CHANNEL_ID!) as TextChannel;
     const modChannel = await interaction.client.channels.fetch(MODERATOR_CHANNEL_ID!) as TextChannel;
-
     const allMessages = await fetchMessagesSince(postChannel, since);
     const filteredMessages = allMessages.filter(m => /https?:\/\//.test(m.content));
     if (filteredMessages.length === 0) {
@@ -53,7 +48,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const postsStats = [];
     const countsPerUser: Record<string, number> = {};
-
     for (const msg of filteredMessages) {
         const checkReaction = msg.reactions.cache.get('✅');
         let userIds: string[] = [];
