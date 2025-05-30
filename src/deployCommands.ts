@@ -2,10 +2,12 @@ import { REST, Routes} from 'discord.js';
 import dotenv from 'dotenv';
 import { holidaysCmd } from './commands/holidays';
 import { scanCmd }  from './commands/scan';
+import { pingCmd }  from './commands/ping';
 
 dotenv.config();
 
 const commands = [
+    pingCmd,
     holidaysCmd,
     scanCmd
 ].map(cmd => cmd.toJSON());
