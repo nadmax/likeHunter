@@ -21,15 +21,17 @@ export async function dailyReport(guildID: string, linkedInChannelID: string, de
         const filteredMessages = messages.filter(m => urlRegex.test(m.content));
         const postsStats: { msg: Message; userIds: string[] }[] = [];
         for (const msg of filteredMessages) {
-            const checkReaction = msg.reactions.cache.get('✅');
+            const fullMsg = await msg.fetch();
+            const checkReaction = fullMsg.reactions.cache.get('✅');
             let userIds: string[] = [];
+
             if (checkReaction) {
                 const users = await checkReaction.users.fetch();
                 userIds.push(...Array.from(users.values()).filter(u => !u.bot).map(u => u.id));
             }
 
             userIds = Array.from(new Set(userIds));
-            postsStats.push({ msg, userIds });
+            postsStats.push({ msg: fullMsg, userIds });
         }
 
         const postsByDate = new Map<string, { date: Date; posts: typeof postsStats }>();

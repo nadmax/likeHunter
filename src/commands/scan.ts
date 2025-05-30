@@ -49,7 +49,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const postsStats = [];
     const countsPerUser: Record<string, number> = {};
     for (const msg of filteredMessages) {
-        const checkReaction = msg.reactions.cache.get('✅');
+        const fullMsg = await msg.fetch();
+        const checkReaction = fullMsg.reactions.cache.get('✅');
         let userIds: string[] = [];
 
         if (checkReaction) {
@@ -58,7 +59,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
 
         userIds = [...new Set(userIds)];
-        postsStats.push({ msg, userIds });
+        postsStats.push({ msg: fullMsg, userIds });
         userIds.forEach(id => (countsPerUser[id] = (countsPerUser[id] || 0) + 1));
     }
 
