@@ -20,7 +20,6 @@ import { client } from './utils/client';
 import dotenv from 'dotenv';
 import './deployCommands';
 import './handlers/interactionHandler';
-import './handlers/messageHandler';
 import { dailyReport } from './utils/dailyReport';
 import { weeklyReports } from './utils/weeklyReport';
 
