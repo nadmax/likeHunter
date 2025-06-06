@@ -25,7 +25,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     if (!member || !member.roles.cache.has(MODERATOR_ROLE_ID)) {
         await interaction.reply({
-            content: `⛔ Tu n’as pas la permission d'utiliser cette commande.`,
+            content: `⛔ Tu n'as pas la permission d'utiliser cette commande.`,
             flags: MessageFlags.Ephemeral
         });
         return;
@@ -38,7 +38,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
     const button = new ButtonBuilder()
         .setCustomId('join_member_role')
-        .setLabel('Rejoindre le serveur')
+        .setLabel('Accéder au serveur')
         .setStyle(ButtonStyle.Success);
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
 
@@ -49,9 +49,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 }
 
 export async function handleButtonInteraction(interaction: ButtonInteraction) {
-    if (interaction.customId !== 'join_member_role') return;
+    if (interaction.customId !== 'join_member_role') {
+        return;
+    }
 
     const MEMBER_ROLE_ID = process.env.MEMBER_ROLE_ID!;
+    const MODERATOR_ROLE_ID = process.env.MODERATOR_ROLE_ID!;
     const guild = interaction.guild;
 
     if (!guild) {
@@ -71,9 +74,9 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
         return;
     }
 
-    if (member.roles.cache.has(MEMBER_ROLE_ID)) {
+    if (member.roles.cache.has(MEMBER_ROLE_ID) || member.roles.cache.has(MODERATOR_ROLE_ID)) {
         await interaction.reply({
-            content: '✅ Tu as déjà le rôle membre.',
+            content: '✅ Tu as déjà les accès au serveur.',
             flags: MessageFlags.Ephemeral
         });
         return;
