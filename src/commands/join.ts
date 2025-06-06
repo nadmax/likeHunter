@@ -57,7 +57,7 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
     if (!guild) {
         await interaction.reply({
             content: '❌ Cette action doit être effectuée dans un serveur.',
-            flags: MessageFlags.Ephemeral,
+            flags: MessageFlags.Ephemeral
         });
         return;
     }
@@ -66,22 +66,22 @@ export async function handleButtonInteraction(interaction: ButtonInteraction) {
     if (!member) {
         await interaction.reply({
             content: '❌ Impossible de récupérer tes informations.',
-            flags: MessageFlags.Ephemeral,
+            flags: MessageFlags.Ephemeral
         });
         return;
     }
 
     if (member.roles.cache.has(MEMBER_ROLE_ID)) {
-        await interaction.update({
+        await interaction.reply({
             content: '✅ Tu as déjà le rôle membre.',
-            components: [],
+            flags: MessageFlags.Ephemeral
         });
         return;
     }
 
     await member.roles.add(MEMBER_ROLE_ID).catch(() => null);
-    await interaction.update({
+    await interaction.reply({
         content: '🎉 Bienvenue ! Tu as maintenant accès au serveur.',
-        components: [],
+        flags: MessageFlags.Ephemeral
     });
 }
