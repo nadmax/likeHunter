@@ -11,7 +11,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const TEST_CHANNEL_ID = process.env.TEST_CHANNEL_ID!;
     const MODERATOR_CHANNEL_ID = process.env.MODERATOR_CHANNEL_ID!;
     const MODERATOR_ROLE_ID = process.env.MODERATOR_ROLE_ID!;
-
     if (!guild) {
         await interaction.reply({
             content: '❌ Cette commande doit être utilisée dans un serveur.',
@@ -23,14 +22,14 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member || !member.roles.cache.has(MODERATOR_ROLE_ID)) {
         await interaction.reply({
-            content: '⛔ Tu n’as pas la permission d’utiliser cette commande.',
+            content: `⛔ Tu n’as pas la permission d'utiliser cette commande.`,
             flags: MessageFlags.Ephemeral,
         });
         return;
     }
 
     if (interaction.channelId !== TEST_CHANNEL_ID && interaction.channelId !== MODERATOR_CHANNEL_ID) {
-        await interaction.reply({ content: '⛔ Cette commande ne doit pas être utilisée ici.', flags: MessageFlags.Ephemeral });
+        await interaction.reply({ content: '⛔ Tu ne peux pas exécuter cette commande ici.', flags: MessageFlags.Ephemeral });
         return;
     }
 

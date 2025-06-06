@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, TextChannel } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, TextChannel, MessageFlags } from 'discord.js';
 import { fetchMessagesSince } from '../utils/fetchMessagesSince';
 import { sendInChunks } from '../utils/sendInChunks';
 import { formatReport } from '../utils/reportFormatter';
@@ -19,15 +19,21 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const TEST_CHANNEL_ID = process.env.TEST_CHANNEL_ID!;
     const LINKEDIN_CHANNEL_ID = process.env.LINKEDIN_CHANNEL_ID!;
     const MODERATOR_ROLE_ID = process.env.MODERATOR_ROLE_ID!;
-    if (interaction.channelId !== MODERATOR_CHANNEL_ID && interaction.channelId !== TEST_CHANNEL_ID) {
-        await interaction.reply({ content: '⛔ Cette commande est réservée au salon modérateur.', ephemeral: true });
+    const guild = interaction.guild;
+    if (!guild) {
+        await interaction.reply({ content: '❌ Erreur: cette commande doit être utilisée dans un serveur.', flags: MessageFlags.Ephemeral });
         return;
     }
 
-    const member = await interaction.guild?.members.fetch(interaction.user.id);
+    if (interaction.channelId !== MODERATOR_CHANNEL_ID && interaction.channelId !== TEST_CHANNEL_ID) {
+        await interaction.reply({ content: '⛔ Tu ne peux pas exécuter cette commande ici.', flags: MessageFlags.Ephemeral });
+        return;
+    }
+
+    const member = await guild.members.fetch(interaction.user.id);
     const hasModeratorRole = member?.roles.cache.some(role => role.id === MODERATOR_ROLE_ID);
     if (!hasModeratorRole) {
-        await interaction.reply({ content: '⛔ Seuls les administrateurs peuvent utiliser cette commande.', ephemeral: true });
+        await interaction.reply({ content: '⛔ Seuls les administrateurs peuvent utiliser cette commande.', flags: MessageFlags.Ephemeral });
         return;
     }
 
@@ -85,7 +91,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         }
 
         reportLines = formatReport({
-            guild: interaction.guild!,
+            guild: guild,
             postsByDate,
             weekUserReactionCount,
             totalWeekPosts,
@@ -93,7 +99,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             isWeeklyRecap: true
         });
     } else {
-        reportLines = formatReport({ guild: interaction.guild!, postsByDate });
+        reportLines = formatReport({ guild: guild, postsByDate });
     }
 
     await sendInChunks(modChannel, reportLines);
