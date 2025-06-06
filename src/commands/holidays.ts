@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, OverwriteType, PermissionFlagsBits, MessageFlags } from 'discord.js';
-import { getHolidaysList, setHolidaysList } from '../utils/holidays';
+import { getHolidaysList, removeUserFromHolidays, setHolidaysList } from '../utils/holidays';
 
 export const holidaysCmd = new SlashCommandBuilder()
     .setName('vacances')
@@ -59,8 +59,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     let holidays = getHolidaysList();
     const isOnHolidays = holidays.includes(userId);
     if (isOnHolidays) {
-        holidays = holidays.filter(id => id !== userId);
-        setHolidaysList(holidays);
+        if (removeUserFromHolidays(userId)) {
+            console.log(`✅ Removed ${userId} from holiday list.`);
+        }
         await member.roles.remove(vacationRole).catch(() => null);
         await linkedInChannel.edit({
             permissionOverwrites: [
