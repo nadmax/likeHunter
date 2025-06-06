@@ -12,6 +12,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const MEMBER_ROLE_ID = process.env.MEMBER_ROLE_ID!;
     const MODERATOR_ROLE_ID = process.env.MODERATOR_ROLE_ID!;
     const HOLIDAYS_ROLE_ID = process.env.HOLIDAYS_ROLE_ID!;
+    const guild = interaction.guild;
+    if (!guild) {
+        await interaction.reply({ content: '❌ Erreur: cette commande doit être utilisée dans un serveur.', flags: MessageFlags.Ephemeral });
+        return;
+    }
 
     if (interaction.channelId !== GENERAL_CHANNEL_ID && interaction.channelId !== TEST_CHANNEL_ID) {
         await interaction.reply({ content: '⛔ Cette commande doit être utilisée dans le salon général.', flags: MessageFlags.Ephemeral });
@@ -19,11 +24,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     const userId = interaction.user.id;
-    const guild = interaction.guild;
-    if (!guild) {
-        await interaction.reply({ content: '❌ Erreur: cette commande doit être utilisée dans un serveur.', flags: MessageFlags.Ephemeral });
-        return;
-    }
 
     const member = await guild.members.fetch(userId).catch(() => null);
     if (!member) {

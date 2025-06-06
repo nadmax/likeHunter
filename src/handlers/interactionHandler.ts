@@ -1,13 +1,14 @@
 import { client } from '../utils/client';
 import * as holidaysCmd from '../commands/holidays';
 import * as scanCmd from '../commands/scan';
-import * as welcomeCmd from '../commands/welcome';
+import * as joinCmd from '../commands/join';
 import * as pingCmd from '../commands/ping';
 import * as listHolidaysCmd from '../commands/holidaymakers';
+import { ChatInputCommandInteraction } from 'discord.js';
 
 client.on('interactionCreate', async interaction => {
     if (interaction.isButton()) {
-        await welcomeCmd.handleButtonInteraction(interaction);
+        await joinCmd.handleButtonInteraction(interaction);
         return;
     }
 
@@ -15,11 +16,12 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
-    const handlers: Record<string, (interaction: any) => void> = {
-        vacances: holidaysCmd.execute,
-        vacanciers: listHolidaysCmd.execute,
+    const handlers: Record<string, (interaction: ChatInputCommandInteraction) => void> = {
+        join: joinCmd.execute,
+        ping: pingCmd.execute,
         scan: scanCmd.execute,
-        ping: pingCmd.execute
+        vacances: holidaysCmd.execute,
+        vacanciers: listHolidaysCmd.execute
     };
     const handler = handlers[interaction.commandName];
     if (handler) {
