@@ -1,3 +1,6 @@
+![Deploy](https://github.com/nadmax/likeHunter/actions/workflows/deploy.yaml/badge.svg)
+
+
 # LikeHunter
 A Discord bot that tracks and analyzes LinkedIn posts shared in a dedicated channel, monitors reactions, and generates activity reports.
 
