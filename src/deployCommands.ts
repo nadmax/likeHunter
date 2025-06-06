@@ -3,12 +3,14 @@ import dotenv from 'dotenv';
 import { holidaysCmd } from './commands/holidays';
 import { scanCmd }  from './commands/scan';
 import { pingCmd }  from './commands/ping';
+import { listHolidaysCmd } from './commands/holidaymakers';
 
 dotenv.config();
 
 const commands = [
     pingCmd,
     holidaysCmd,
+    listHolidaysCmd,
     scanCmd
 ].map(cmd => cmd.toJSON());
 
