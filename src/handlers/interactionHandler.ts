@@ -16,10 +16,11 @@ client.on('interactionCreate', async interaction => {
     }
 
     const handlers: Record<string, (interaction: any) => void> = {
+        bienvenue: welcomeCmd.execute,
         vacances: holidaysCmd.execute,
         vacanciers: listHolidaysCmd.execute,
         scan: scanCmd.execute,
-        ping: pingCmd.execute
+        ping: pingCmd.execute,
     };
     const handler = handlers[interaction.commandName];
     if (handler) {
