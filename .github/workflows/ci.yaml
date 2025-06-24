@@ -1,0 +1,9 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: Build likeHunter
+    uses: ./.github/workflows/build.yaml
