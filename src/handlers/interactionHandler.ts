@@ -5,6 +5,7 @@ import * as joinCmd from '../commands/join';
 import * as pingCmd from '../commands/ping';
 import * as listHolidaysCmd from '../commands/holidaymakers';
 import { ChatInputCommandInteraction } from 'discord.js';
+import * as helpCmd from '../commands/help';
 
 client.on('interactionCreate', async interaction => {
     if (interaction.isButton()) {
@@ -21,7 +22,8 @@ client.on('interactionCreate', async interaction => {
         ping: pingCmd.execute,
         scan: scanCmd.execute,
         vacances: holidaysCmd.execute,
-        vacanciers: listHolidaysCmd.execute
+        vacanciers: listHolidaysCmd.execute,
+        help: helpCmd.execute
     };
     const handler = handlers[interaction.commandName];
     if (handler) {
