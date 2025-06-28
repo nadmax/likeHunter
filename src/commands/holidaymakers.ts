@@ -16,6 +16,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             content: '❌ Cette commande doit être utilisée dans un serveur.',
             flags: MessageFlags.Ephemeral,
         });
+
         return;
     }
 
@@ -25,31 +26,33 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             content: `⛔ Tu n’as pas la permission d'utiliser cette commande.`,
             flags: MessageFlags.Ephemeral,
         });
+
         return;
     }
 
     if (interaction.channelId !== TEST_CHANNEL_ID && interaction.channelId !== MODERATOR_CHANNEL_ID) {
         await interaction.reply({ content: '⛔ Tu ne peux pas exécuter cette commande ici.', flags: MessageFlags.Ephemeral });
+
         return;
     }
+
+    await interaction.deferReply({
+        flags: MessageFlags.Ephemeral,
+    });
 
     const userIds = getHolidaysList();
     if (userIds.length === 0) {
         await interaction.reply('🟢 Personne n’est actuellement en vacances.');
+
         return;
     }
 
-    const mentions: string[] = [];
-    for (const id of userIds) {
-        const m = await guild.members.fetch(id).catch(() => null);
-        if (m) {
-            mentions.push(`• ${m.toString()} (${m.displayName})`);
-        } else {
-            mentions.push(`• \`Utilisateur inconnu\` (${id})`);
-        }
-    }
+    const results = await Promise.all(userIds.map(id =>
+        guild.members.fetch(id)
+            .then(m => `• ${m.toString()} (${m.displayName})`)
+            .catch(() => `• \`Utilisateur inconnu\` (${id})`)
+    ));
+    const reply = `🌴 Membres en vacances :\n\n${results.join('\n')}`;
 
-    const reply = `🌴 Membres en vacances :\n\n${mentions.join('\n')}`;
-
-    await interaction.reply(reply);
+    await interaction.editReply(reply);
 }
