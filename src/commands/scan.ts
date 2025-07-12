@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, TextChannel, MessageFlags } from 'discord.js';
+import { AttachmentBuilder, SlashCommandBuilder, ChatInputCommandInteraction, TextChannel, MessageFlags } from 'discord.js';
 import { fetchMessagesSince } from '../utils/fetchMessagesSince';
 import { sendInChunks } from '../utils/sendInChunks';
 import { formatReport } from '../utils/reportFormatter';
@@ -8,9 +8,9 @@ export const scanCmd = new SlashCommandBuilder()
     .setDescription('Scan les messages LinkedIn')
     .addStringOption(option =>
         option.setName('période')
-        .setDescription('Période à analyser')
-        .setRequired(true)
-        .addChoices({ name: 'jour', value: 'jour' }, { name: 'semaine', value: 'semaine' })
+            .setDescription('Période à analyser')
+            .setRequired(true)
+            .addChoices({ name: 'jour', value: 'jour' }, { name: 'semaine', value: 'semaine' })
     );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -37,7 +37,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         return;
     }
 
-    await interaction.reply('📊 Récupération des messages...');
+    await interaction.reply('📊 Récupération des réactions...');
 
     const now = new Date();
     const since = period === 'jour'
@@ -83,11 +83,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         const weekUserReactionCount: Record<string, number> = {};
 
         for (const { posts } of postsByDate.values()) {
-        posts.forEach(p => {
-            totalWeekPosts++;
-            totalWeekReactions += p.userIds.length;
-            p.userIds.forEach(id => weekUserReactionCount[id] = (weekUserReactionCount[id] || 0) + 1);
-        });
+            posts.forEach(p => {
+                totalWeekPosts++;
+                totalWeekReactions += p.userIds.length;
+                p.userIds.forEach(id => weekUserReactionCount[id] = (weekUserReactionCount[id] || 0) + 1);
+            });
         }
 
         reportLines = formatReport({
@@ -98,10 +98,15 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             totalWeekReactions,
             isWeeklyRecap: true
         });
+        const fullReport = reportLines.join('\n');
+        const buffer = Buffer.from(fullReport, 'utf-8');
+        const file = new AttachmentBuilder(buffer, { name: 'weekly_report.txt' });
+
+        await modChannel.send({ content: '📄 Rapport hebdomadaire :', files: [file] });
     } else {
         reportLines = formatReport({ guild: guild, postsByDate });
-    }
 
-    await sendInChunks(modChannel, reportLines);
+        await sendInChunks(modChannel, reportLines);
+    }
     await interaction.followUp('✅ Rapport envoyé.');
 }
