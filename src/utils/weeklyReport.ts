@@ -1,4 +1,5 @@
-import { TextChannel, Message } from 'discord.js';
+import { AttachmentBuilder, TextChannel, Message } from 'discord.js';
+import { Buffer } from 'buffer';
 import cron from 'node-cron';
 import { client } from './client'
 import { fetchMessagesSince } from './fetchMessagesSince';
@@ -77,6 +78,10 @@ export async function weeklyReports(guildID: string, linkedInChannelID: string, 
             totalWeekReactions,
             isWeeklyRecap: true
         });
-        await sendInChunks(destChannel, dayLines);
+        const fullReport = dayLines.join('\n');
+        const buffer = Buffer.from(fullReport, 'utf-8');
+        const file = new AttachmentBuilder(buffer, { name: 'weekly_report.txt' });
+
+        await destChannel.send({ content: '📄 Rapport hebdomadaire :', files: [file] });
     });
 }
